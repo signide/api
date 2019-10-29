@@ -1,8 +1,13 @@
 import { query } from "../db/query";
-import { IUser } from "./user.interface";
 import { createHash } from "../common/hashing";
 
-export async function store(user: IUser): Promise<IUser> {
+interface IUser {
+  username: string;
+  email: string;
+  password: string;
+}
+
+export async function createUser(user: IUser): Promise<IUser> {
   const hash = await createHash(user.password);
   try {
     const text = `
@@ -19,7 +24,7 @@ RETURNING *
   }
 }
 
-export async function getUserInfo(username: string): Promise<IUser> {
+export async function getUser(username: string): Promise<IUser> {
   try {
     const text = `SELECT * FROM users WHERE username=$1`;
     const values = [username];

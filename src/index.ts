@@ -2,7 +2,7 @@ import express from "express";
 import bodyParser from "body-parser";
 import winston from "winston";
 import expressWinston from "express-winston";
-import { userRouter } from "./users/user.controller";
+import { userRouter } from "./users/controller";
 import { apiConfig } from "./config/config";
 
 const app = express();

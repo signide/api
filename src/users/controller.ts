@@ -1,10 +1,10 @@
 import express from "express";
 import jwt from "jsonwebtoken";
 import expressJwt from "express-jwt";
-import { store, getUserInfo } from "./user.service";
+import { createUser, getUser } from "./model";
 import { createValidator } from "../validation/validation";
 import { userSchema } from "../validation/schemas";
-import { jwtConfig } from "./../config/config";
+import { jwtConfig } from "../config/config";
 import { IExtendedRequest } from "../common/request.interface";
 
 function capitalize(str: string): string {
@@ -16,7 +16,7 @@ export const userRouter = express.Router();
 
 userRouter.post("/", createValidator(userSchema), async (req, res) => {
   try {
-    const data = await store(req.body);
+    const data = await createUser(req.body);
     const token = jwt.sign({ id: data.username }, secret, {
       expiresIn: 86400
     });
@@ -39,7 +39,7 @@ userRouter.get(
   expressJwt({ secret }),
   async (req: IExtendedRequest, res) => {
     try {
-      const userInfo = await getUserInfo(req.user.id);
+      const userInfo = await getUser(req.user.id);
       res.status(200).json(userInfo);
     } catch (err) {
       res.status(404).send(err.message);
