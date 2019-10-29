@@ -1,6 +1,7 @@
 {
   "name": "kakashi-api",
   "version": "0.1.0",
+  "description": "An API that I'm writing to learn how.",
   "main": "src/index.ts",
   "author": "kakashi000",
   "license": "MIT",
