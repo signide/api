@@ -3,6 +3,7 @@ import bodyParser from "body-parser";
 import winston from "winston";
 import expressWinston from "express-winston";
 import { userRouter } from "./users/user.controller";
+import { apiConfig } from "./config/config";
 
 const app = express();
 
@@ -24,7 +25,7 @@ app.use(bodyParser.json());
 app.use("/users", userRouter);
 app.use(errorLogger);
 
-const port = 4000;
+const { port } = apiConfig;
 
 app.listen(port, () => {
   console.log(`Server listening on port ${port}`);

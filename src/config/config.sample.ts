@@ -1,9 +1,15 @@
 export const apiConfig = {
-  inProduction: false
+  inProduction: false,
+  port: 3000
 };
 
 export const postgresConfig = {
   user: "myAdmin",
   password: "pass12345",
   database: "toptal"
+};
+
+export const jwtConfig = {
+  jwtSecret: "its a secret ;)",
+  tokenExpireTime: "6h"
 };

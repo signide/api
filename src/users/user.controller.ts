@@ -1,18 +1,27 @@
 import express from "express";
-import { store } from "../db/user";
+import jwt from "jsonwebtoken";
+import expressJwt from "express-jwt";
+import { store, getUserInfo } from "./user.service";
 import { createValidator } from "../validation/validation";
 import { userSchema } from "../validation/schemas";
+import { jwtConfig } from "./../config/config";
+import { IExtendedRequest } from "../common/request.interface";
 
 function capitalize(str: string): string {
   return str[0].toUpperCase() + str.slice(1);
 }
 
+const { secret } = jwtConfig;
 export const userRouter = express.Router();
 
 userRouter.post("/", createValidator(userSchema), async (req, res) => {
   try {
     const data = await store(req.body);
-    res.status(201).send(`Successfully created user '${data.username}'`);
+    const token = jwt.sign({ id: data.username }, secret, {
+      expiresIn: 86400
+    });
+
+    res.status(201).send({ auth: true, token: token });
   } catch (err) {
     if (err.message.includes("duplicate")) {
       const type = err.constraint.split("_")[0];
@@ -24,3 +33,16 @@ userRouter.post("/", createValidator(userSchema), async (req, res) => {
     res.status(400).send("Something went wrong.");
   }
 });
+
+userRouter.get(
+  "/me",
+  expressJwt({ secret }),
+  async (req: IExtendedRequest, res) => {
+    try {
+      const userInfo = await getUserInfo(req.user.id);
+      res.status(200).json(userInfo);
+    } catch (err) {
+      res.status(404).send(err.message);
+    }
+  }
+);
