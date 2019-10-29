@@ -1,5 +1,7 @@
 import express from "express";
 import { store } from "../db/user";
+import { createValidator } from "../validation/validation";
+import { userSchema } from "../validation/schemas";
 
 function capitalize(str: string): string {
   return str[0].toUpperCase() + str.slice(1);
@@ -7,18 +9,7 @@ function capitalize(str: string): string {
 
 export const userRouter = express.Router();
 
-userRouter.post("/", async (req, res) => {
-  const requiredFields = ["username", "password", "email"];
-
-  for (const field of requiredFields) {
-    if (req.body[field] == null) {
-      return res.status(400).send(`The ${field} field is required.`);
-    }
-    if (typeof req.body[field] !== "string") {
-      return res.status(400).send(`The ${field} field must be a string.`);
-    }
-  }
-
+userRouter.post("/", createValidator(userSchema), async (req, res) => {
   try {
     const data = await store(req.body);
     res.status(201).send(`Successfully created user '${data.username}'`);
