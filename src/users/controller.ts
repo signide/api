@@ -7,10 +7,6 @@ import { userSchema } from "../validation/schemas";
 import { jwtConfig } from "../config/config";
 import { IExtendedRequest } from "../common/request.interface";
 
-function capitalize(str: string): string {
-  return str[0].toUpperCase() + str.slice(1);
-}
-
 const { secret } = jwtConfig;
 export const userRouter = express.Router();
 
@@ -25,12 +21,16 @@ userRouter.post("/", createValidator(userSchema), async (req, res) => {
   } catch (err) {
     if (err.message.includes("duplicate")) {
       const type = err.constraint.split("_")[0];
-      return res
-        .status(400)
-        .send(`${capitalize(type)} '${req.body[type]}' already exists.`);
+      const message = `${type} "${req.body[type]}" already exists`;
+      console.warn(`ERROR: ${message}`);
+      return res.status(400).send({
+        error: message
+      });
     }
 
-    res.status(400).send("Something went wrong.");
+    res.status(400).send({
+      error: "something went wrong"
+    });
   }
 });
 
@@ -40,9 +40,13 @@ userRouter.get(
   async (req: IExtendedRequest, res) => {
     try {
       const userInfo = await getUser(req.user.id);
-      res.status(200).json(userInfo);
+      res.status(200).send(userInfo);
     } catch (err) {
-      res.status(404).send(err.message);
+      const { message } = err;
+      console.warn(`ERROR: ${message}`);
+      res.status(404).send({
+        error: message
+      });
     }
   }
 );

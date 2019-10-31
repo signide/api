@@ -12,7 +12,6 @@ export function createValidator(schema: Schema) {
       const message = details.map(i => i.message).join(",");
       console.warn(`ERROR: ${message}`);
       res.status(422).json({ error: message });
-      // throw new Error(message)
     }
   };
 }
