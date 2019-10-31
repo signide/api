@@ -7,7 +7,8 @@
   "license": "MIT",
   "scripts": {
     "test": "jest --runInBand",
-    "dev": "ts-node ./src/server.ts"
+    "dev": "ts-node ./src/server.ts",
+    "format": "prettier ./src/**/* --write"
   },
   "devDependencies": {
     "@types/bcrypt": "^3.0.0",
