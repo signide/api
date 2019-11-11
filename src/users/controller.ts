@@ -2,8 +2,8 @@ import express from "express";
 import jwt from "jsonwebtoken";
 import expressJwt from "express-jwt";
 import { createUser, getUser } from "./model";
-import { createValidator } from "../validation/validation";
-import { userSchema } from "../validation/schemas";
+import { createValidator } from "../common/validation";
+import { userSchema } from "./schema";
 import { jwtConfig } from "../config/config";
 import { IExtendedRequest } from "../common/request.interface";
 
@@ -12,8 +12,8 @@ export const userRouter = express.Router();
 
 userRouter.post("/", createValidator(userSchema), async (req, res) => {
   try {
-    const data = await createUser(req.body);
-    const token = jwt.sign({ id: data.username }, secret, {
+    const { id, username } = await createUser(req.body);
+    const token = jwt.sign({ id, username }, secret, {
       expiresIn: 86400
     });
 

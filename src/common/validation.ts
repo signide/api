@@ -1,8 +1,8 @@
-import Joi, { Schema } from "joi";
+import { Schema } from "joi";
 
 export function createValidator(schema: Schema) {
   return (req, res, next) => {
-    const { error } = Joi.validate(req.body, schema);
+    const { error } = schema.validate(req.body);
     const valid = error == null;
 
     if (valid) {

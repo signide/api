@@ -2,6 +2,7 @@ import { query } from "../db/query";
 import { createHash } from "../common/hashing";
 
 interface IUser {
+  id: number;
   username: string;
   email: string;
   password: string;
