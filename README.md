@@ -8,5 +8,5 @@ I'm learning how to write APIs. This repository houses my progress, almost every
 - [ ] Login
 - [x] Authentication
 - [ ] Multiple roles
-- [ ] Statistics repotrts
+- [ ] Statistics reports
 - [ ] Unit tests
