@@ -4,9 +4,9 @@ I'm learning how to write APIs. This repository houses my progress, almost every
 
 ### Feature checklist:
 
-- [ ] Account creation
+- [x] Account creation
 - [ ] Login
-- [ ] Authentication
+- [x] Authentication
 - [ ] Multiple roles
 - [ ] Statistics repotrts
 - [ ] Unit tests
