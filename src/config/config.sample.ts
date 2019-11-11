@@ -1,3 +1,7 @@
+export const apiKeys = {
+  weather: "your-api-key"
+};
+
 export const apiConfig = {
   inProduction: false,
   port: 3000
@@ -6,7 +10,7 @@ export const apiConfig = {
 export const postgresConfig = {
   user: "myAdmin",
   password: "pass12345",
-  database: "toptal"
+  database: "mydb"
 };
 
 export const jwtConfig = {

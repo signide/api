@@ -2,8 +2,9 @@ import express from "express";
 import bodyParser from "body-parser";
 import winston from "winston";
 import expressWinston from "express-winston";
-import { userRouter } from "./users/controller";
 import { apiConfig } from "./config/config";
+import { userRouter } from "./users/controller";
+import { entryRouter } from "./entries/controller";
 
 const app = express();
 
@@ -20,9 +21,19 @@ const errorLogger = expressWinston.errorLogger({
   format: winston.format.json()
 });
 
+function tokenHandler(err, req, res, next) {
+  if (err.name === "UnauthorizedError") {
+    console.warn(err);
+    res.status(401).send({ error: err.message });
+  }
+  next();
+}
+
 app.use(logger);
 app.use(bodyParser.json());
 app.use("/users", userRouter);
+app.use("/entries", entryRouter);
+app.use(tokenHandler);
 app.use(errorLogger);
 
 const { port } = apiConfig;
