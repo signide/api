@@ -1,8 +1,10 @@
+import { Dictionary } from "../common/utility_types";
 import { query } from "../db/query";
 import { RequireAtLeastOne } from "../common/utility_types";
 import { nest } from "../common/nesting";
 
 interface BaseEntry {
+  id: number;
   userID: number;
   date: Date;
   distance: number;
@@ -50,24 +52,30 @@ RETURNING *
   return nest(result.rows[0], ["user", "city"]);
 }
 
-export async function getEntry(id: string): Promise<IEntry> {
+export async function getEntry(id: number): Promise<Dictionary<any> | void> {
   const text = `
 SELECT
   entries.id,
-  user_id,
-  username AS user_name,
-  date,
-  distance,
-  duration,
-  city_id,
+  entries.user_id,
+  users.username AS user_name,
+  entries.date,
+  entries.distance,
+  entries.duration,
+  entries.city_id,
+  cities.name AS city_name,
+  cities.country_code AS city_country_code,
   entries.created_on
 FROM 
   entries
 INNER JOIN users ON entries.user_id = users.id
+INNER JOIN cities ON entries.city_id = cities.id
 WHERE
-  user_id = $1;
+  entries.id = $1;
 `;
   const values = [id];
   const result = await query(text, values);
-  return result.rows[0];
+  if (!result.rows[0]) {
+    return;
+  }
+  return nest(result.rows[0], ["user", "city"]);
 }
