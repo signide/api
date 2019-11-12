@@ -1,3 +1,4 @@
+import { loginRouter } from "./login/controller";
 import express from "express";
 import bodyParser from "body-parser";
 import winston from "winston";
@@ -31,6 +32,7 @@ function tokenHandler(err, req, res, next) {
 
 app.use(logger);
 app.use(bodyParser.json());
+app.use("/login", loginRouter);
 app.use("/users", userRouter);
 app.use("/entries", entryRouter);
 app.use(tokenHandler);

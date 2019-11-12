@@ -1,7 +1,7 @@
 import express from "express";
 import jwt from "jsonwebtoken";
 import expressJwt from "express-jwt";
-import { createUser, getUser } from "./model";
+import { createUser, getUser, IUser } from "./model";
 import { createValidator } from "../common/validation";
 import { userSchema } from "./schema";
 import { jwtConfig } from "../config/config";
@@ -17,7 +17,7 @@ userRouter.post("/", createValidator(userSchema), async (req, res) => {
       expiresIn: 86400
     });
 
-    res.status(201).send({ auth: true, token: token });
+    res.status(201).send({ auth: true, token });
   } catch (err) {
     if (err.message.includes("duplicate")) {
       const type = err.constraint.split("_")[0];
@@ -39,7 +39,8 @@ userRouter.get(
   expressJwt({ secret }),
   async (req: IExtendedRequest, res) => {
     try {
-      const userInfo = await getUser(Number(req.user.id));
+      const user = await getUser(Number(req.user.id));
+      const { password, ...userInfo } = <IUser>user;
       res.status(200).send(userInfo);
     } catch (err) {
       const { message } = err;
