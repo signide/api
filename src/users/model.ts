@@ -20,10 +20,10 @@ RETURNING *
   return result.rows[0];
 }
 
-export async function getUser(username: string): Promise<IUser> {
-  const text = `SELECT * FROM users WHERE username=$1`;
-  const values = [username];
+export async function getUser(id: number): Promise<IUser> {
+  const text = `SELECT * FROM users WHERE id=$1`;
+  const values = [id];
   const result = await query(text, values);
-  const { password, id, ...userInfo } = result.rows[0];
+  const { password, ...userInfo } = result.rows[0];
   return userInfo;
 }

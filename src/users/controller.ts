@@ -39,7 +39,7 @@ userRouter.get(
   expressJwt({ secret }),
   async (req: IExtendedRequest, res) => {
     try {
-      const userInfo = await getUser(req.user.id);
+      const userInfo = await getUser(Number(req.user.id));
       res.status(200).send(userInfo);
     } catch (err) {
       const { message } = err;
