@@ -1,23 +1,24 @@
-export function nest(obj: any, toNest: string[]): any {
-  return Object.keys(obj).reduce((acc, key) => {
-    const value = obj[key];
-    if (key.includes("_")) {
-      const [name, prop] = key.split("_");
+import { Dictionary } from "./utility_types";
 
-      if (!toNest.includes(name)) {
-        acc[key] = value;
-        return acc;
-      }
+export type NestSchema = Dictionary<[string, string]>;
 
-      if (acc[name] == null) {
-        acc[name] = {};
-      }
-
-      acc[name][prop] = value;
+export function nest(obj: any, schema: NestSchema): any {
+  const allKeys = [...new Set([...Object.keys(obj), ...Object.keys(schema)])];
+  return allKeys.reduce((acc, key) => {
+    if (!schema[key]) {
+      acc[key] = obj[key];
       return acc;
     }
 
-    acc[key] = value;
+    if (!obj[key]) {
+      return acc;
+    }
+
+    const [topNest, bottomNest] = schema[key];
+    if (!acc[topNest]) {
+      acc[topNest] = {};
+    }
+    acc[topNest][bottomNest] = obj[key];
     return acc;
   }, {});
 }

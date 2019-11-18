@@ -1,7 +1,26 @@
 import { Dictionary } from "../common/utility_types";
 import { query } from "../db/query";
 import { RequireAtLeastOne } from "../common/utility_types";
-import { nest } from "../common/nesting";
+import { nest, NestSchema } from "../common/nesting";
+
+const nestSchema: NestSchema = {
+  city_id: ["city", "id"],
+  country_code: ["city", "country_code"],
+  city_name: ["city", "name"],
+  user_id: ["user", "id"],
+  user_name: ["user", "name"],
+  weather_description: ["weather", "description"],
+  wind_speed: ["weather", "wind_speed"],
+  temp: ["weather", "temperature"],
+  humidity: ["weather", "humidity"]
+};
+
+interface IWeather {
+  wind?: number;
+  temp?: number;
+  humidity?: number;
+  description?: string;
+}
 
 interface BaseEntry {
   id: number;
@@ -9,62 +28,90 @@ interface BaseEntry {
   date: Date;
   distance: number;
   duration: number;
-  cityID?: number;
+  cityID?: string;
   cityName?: string;
+  weather?: IWeather;
 }
 
 type IEntry = RequireAtLeastOne<BaseEntry, "cityID" | "cityName">;
 
-const cityNameIdMap: Map<string, number> = new Map();
+const cityNameIdMap: Dictionary<string> = {};
 
-export async function createEntry(entry: IEntry): Promise<IEntry> {
-  let cityID = entry.cityID || cityNameIdMap.get(entry.cityName);
+export async function getCityIDFromName(name: string): Promise<string> {
+  let cityID = cityNameIdMap[name];
+
   if (cityID == null) {
-    const result = await query("SELECT * FROM cities WHERE name = $1", [
-      entry.cityName
-    ]);
+    const result = await query("SELECT * FROM cities WHERE name = $1", [name]);
 
     if (result.rows.length === 0) {
-      throw new Error(`city ${entry.cityName} is unknown`);
+      throw new Error(`city ${name} is unknown`);
     }
 
     const id = result.rows[0].id;
     cityID = id;
-    cityNameIdMap.set(entry.cityName, id);
+    cityNameIdMap[name] = id;
   }
 
+  return cityID;
+}
+
+export async function createEntry(entry: IEntry): Promise<IEntry> {
   const text = `
-INSERT INTO entries (user_id, date, distance, duration, city_id, created_on)
-VALUES ($1, $2, $3, $4, $5, to_timestamp($6 / 1000.0))
+INSERT INTO entries (
+  user_id,
+  date,
+  distance,
+  duration,
+  created_on,
+  city_id,
+  wind_speed,
+  temp,
+  humidity,
+  weather_description
+)
+VALUES ($1, $2, $3, $4, NOW(), $5, $6, $7, $8, $9)
 RETURNING *
   `;
 
-  const values = [
+  let values = [
     entry.userID,
     entry.date,
     entry.distance,
     entry.duration,
-    cityID,
-    Date.now()
+    entry.cityID
   ];
 
+  if (entry.weather) {
+    const weather = entry.weather;
+    values = values.concat([
+      weather.wind,
+      weather.temp,
+      weather.humidity,
+      weather.description
+    ]);
+  }
+
   const result = await query(text, values);
-  return nest(result.rows[0], ["user", "city"]);
+  return nest(result.rows[0], nestSchema);
 }
 
-export async function getEntry(id: number): Promise<Dictionary<any> | void> {
+export async function getEntry(id: number): Promise<Dictionary<any>> {
   const text = `
 SELECT
   entries.id,
   entries.user_id,
-  users.username AS user_name,
   entries.date,
   entries.distance,
   entries.duration,
   entries.city_id,
+  entries.created_on,
+  entries.wind_speed,
+  entries.temp,
+  entries.humidity,
+  entries.weather_description,
+  users.username AS user_name,
   cities.name AS city_name,
-  cities.country_code AS city_country_code,
-  entries.created_on
+  cities.country_code AS country_code
 FROM 
   entries
 INNER JOIN users ON entries.user_id = users.id
@@ -77,5 +124,5 @@ WHERE
   if (!result.rows[0]) {
     return;
   }
-  return nest(result.rows[0], ["user", "city"]);
+  return nest(result.rows[0], nestSchema);
 }
