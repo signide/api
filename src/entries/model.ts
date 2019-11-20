@@ -42,7 +42,7 @@ export async function getCityIDFromName(name: string): Promise<string> {
   let cityID = cityNameIdMap[name];
 
   if (cityID == null) {
-    const result = await query("SELECT * FROM cities WHERE name = $1", [name]);
+    const result = await query("SELECT id FROM cities WHERE name = $1", [name]);
 
     if (result.rows.length === 0) {
       throw new CityError(name);
