@@ -7,6 +7,6 @@ I'm learning how to write APIs. This repository houses my progress, almost every
 - [x] Account creation _-- Achieved on 2019-10-29_
 - [x] Authentication _-- Achieved on 2019-10-30_
 - [x] Login _-- Achieved on 2019-11-13_
+- [x] Unit tests _-- Achieved on 2019-11-20_
 - [ ] Multiple roles
 - [ ] Statistics reports
-- [ ] Unit tests
