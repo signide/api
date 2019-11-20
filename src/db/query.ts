@@ -5,7 +5,7 @@ export const pool = new Pool(postgresConfig);
 
 export async function query(
   text: string,
-  params: any[]
+  params?: any[]
 ): Promise<QueryResult<any>> {
   return await pool.query(text, params);
 }

@@ -1,7 +1,7 @@
 import express from "express";
 import jwt from "jsonwebtoken";
 import expressJwt from "express-jwt";
-import { createUser, getUser, IUser } from "./model";
+import { createUser, getUser, IUser, getUsers } from "./model";
 import { createValidator } from "../common/validation";
 import { userSchema } from "./schema";
 import { jwtConfig } from "../config/config";
@@ -36,16 +36,53 @@ userRouter.post("/", createValidator(userSchema), async (req, res) => {
 });
 
 userRouter.get(
+  "/",
+  expressJwt({ secret }),
+  async (req: IExtendedRequest, res) => {
+    try {
+      const user = await getUser(req.user.id);
+      if (!user) {
+        return res.status(401).send({
+          error: "no user associated with token"
+        });
+      }
+
+      const isManager = ["manager", "admin"].includes(user.role);
+      if (isManager) {
+        const users = await getUsers();
+        res.status(200).send(users);
+      }
+
+      return res.status(401).send({
+        error: "only managers and above can access this endpoint"
+      });
+    } catch (err) {
+      console.warn(err);
+      res.status(500).send({
+        error: "something went wrong"
+      });
+    }
+  }
+);
+
+userRouter.get(
   "/me",
   expressJwt({ secret }),
   async (req: IExtendedRequest, res) => {
     try {
       const user = await getUser(Number(req.user.id));
-      const { password, ...userInfo } = <IUser>user;
+      if (!user) {
+        return res.status(401).send({
+          error: "no user associated with token"
+        });
+      }
+
+      const { password, ...userInfo } = user;
       res.status(200).send(userInfo);
     } catch (err) {
       const { message } = err;
       console.warn(err);
+
       res.status(500).send({
         error: message
       });
