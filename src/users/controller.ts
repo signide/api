@@ -20,15 +20,16 @@ userRouter.post("/", createValidator(userSchema), async (req, res) => {
     res.status(201).send({ auth: true, token });
   } catch (err) {
     if (err.message.includes("duplicate")) {
-      const type = err.constraint.split("_")[0];
-      const message = `${type} "${req.body[type]}" already exists`;
-      console.warn(`ERROR: ${message}`);
-      return res.status(400).send({
+      const [_, type] = err.detail.match(/\(([^\)]+)\)/);
+      const message = `${type} '${req.body[type]}' already exists`;
+      console.warn(err);
+      return res.status(422).send({
         error: message
       });
     }
 
-    res.status(400).send({
+    console.warn(err);
+    res.status(500).send({
       error: "something went wrong"
     });
   }
@@ -44,8 +45,8 @@ userRouter.get(
       res.status(200).send(userInfo);
     } catch (err) {
       const { message } = err;
-      console.warn(`ERROR: ${message}`);
-      res.status(404).send({
+      console.warn(err);
+      res.status(500).send({
         error: message
       });
     }

@@ -10,7 +10,7 @@ export function createValidator(schema: Schema) {
     } else {
       const { details } = error;
       const message = details.map(i => i.message).join(",");
-      console.warn(`ERROR: ${message}`);
+      console.warn(error);
       res.status(422).json({ error: message });
     }
   };

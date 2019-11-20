@@ -2,6 +2,7 @@ import { Dictionary } from "../common/utility_types";
 import { query } from "../db/query";
 import { RequireAtLeastOne } from "../common/utility_types";
 import { nest, NestSchema } from "../common/nesting";
+import { CityError } from "../common/errors";
 
 const nestSchema: NestSchema = {
   city_id: ["city", "id"],
@@ -44,7 +45,7 @@ export async function getCityIDFromName(name: string): Promise<string> {
     const result = await query("SELECT * FROM cities WHERE name = $1", [name]);
 
     if (result.rows.length === 0) {
-      throw new Error(`city ${name} is unknown`);
+      throw new CityError(name);
     }
 
     const id = result.rows[0].id;

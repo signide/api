@@ -7,21 +7,33 @@ import { createValidator } from "../common/validation";
 import { entrySchema } from "./schema";
 import { createEntry, getEntry, getCityIDFromName } from "./model";
 import { apiKeys } from "../config/config";
+import { CityError } from "../common/errors";
 
 const { secret } = jwtConfig;
 export const entryRouter = express.Router();
 
-async function getWeatherData(id: string) {
+interface IWeather {
+  wind: number;
+  temp: number;
+  humidity: number;
+  description: string;
+}
+
+async function getWeatherData(id: number): Promise<IWeather> {
   const response = await fetch(
     `https://api.openweathermap.org/data/2.5/weather?appid=${apiKeys.weather}&id=${id}`
   );
 
   const data = await response.json();
+  if (data.cod === "404") {
+    throw new CityError(id);
+  }
+
   const result = {
     wind: data.wind?.speed,
     temp: data.main?.temp,
     humidity: data.main?.humidity,
-    description: data.weather[0].description
+    description: data.weather?.[0].description
   };
 
   return result;
@@ -35,17 +47,27 @@ entryRouter.post(
     try {
       const cityID =
         req.body.cityID ?? (await getCityIDFromName(req.body.cityName));
+
       const data = {
         userID: req.user.id,
         weather: await getWeatherData(cityID),
         cityID,
         ...req.body
       };
+
       const entry = await createEntry(data);
       res.status(201).send(entry);
     } catch (err) {
-      res.status(400).send({
-        error: err.message
+      console.warn(err);
+
+      if (err instanceof CityError) {
+        return res.status(422).send({
+          error: err.message
+        });
+      }
+
+      res.status(500).send({
+        error: "something went wrong"
       });
     }
   }
@@ -72,8 +94,9 @@ entryRouter.get(
 
       res.status(200).send(data);
     } catch (err) {
-      res.status(400).send({
-        error: err.message
+      console.warn(err);
+      res.status(500).send({
+        error: "something went wrong"
       });
     }
   }
