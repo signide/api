@@ -7,18 +7,11 @@ import { createValidator } from "../common/validation";
 import { entrySchema } from "./schema";
 import { createEntry, getEntry, getCityIDFromName } from "./model";
 import { apiKeys } from "../config/config";
-import { Dictionary } from "../common/utility_types";
 
 const { secret } = jwtConfig;
 export const entryRouter = express.Router();
 
-const weatherCache: Dictionary<any> = {};
-
 async function getWeatherData(id: string) {
-  if (weatherCache[id]) {
-    return weatherCache[id];
-  }
-
   const response = await fetch(
     `https://api.openweathermap.org/data/2.5/weather?appid=${apiKeys.weather}&id=${id}`
   );
@@ -31,7 +24,6 @@ async function getWeatherData(id: string) {
     description: data.weather[0].description
   };
 
-  weatherCache[id] = result;
   return result;
 }
 
@@ -42,7 +34,7 @@ entryRouter.post(
   async (req: IExtendedRequest, res) => {
     try {
       const cityID =
-        req.body.cityID || (await getCityIDFromName(req.body.cityName));
+        req.body.cityID ?? (await getCityIDFromName(req.body.cityName));
       const data = {
         userID: req.user.id,
         weather: await getWeatherData(cityID),
