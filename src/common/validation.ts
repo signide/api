@@ -1,6 +1,7 @@
 import { Schema } from "joi";
+import { RequestHandler } from "express";
 
-export function createValidator(schema: Schema) {
+export function createValidator(schema: Schema): RequestHandler {
   return (req, res, next) => {
     const { error } = schema.validate(req.body);
     const valid = error == null;
