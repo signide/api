@@ -1,7 +1,7 @@
 import request from "supertest";
 import faker from "faker/locale/en";
 import { app } from "../app";
-import { query } from "../db/query";
+import { query, pool } from "../db/query";
 
 const jwtRegex = /^.*\..*\..*$/;
 const username = "randomUsername12345";
@@ -17,6 +17,7 @@ afterAll(async () => {
   const userId = selectUser.rows[0].id;
   await query("DELETE FROM entries WHERE user_id=$1", [userId]);
   await query("DELETE FROM users WHERE id=$1", [userId]);
+  await pool.end();
 });
 
 describe("/users", () => {
