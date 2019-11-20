@@ -40,7 +40,7 @@ userRouter.get(
   expressJwt({ secret }),
   async (req: IExtendedRequest, res) => {
     try {
-      const user = await getUser(req.user.id);
+      const user = await getUser(Number(req.user.id));
       if (!user) {
         return res.status(401).send({
           error: "no user associated with token"
@@ -50,7 +50,7 @@ userRouter.get(
       const isManager = ["manager", "admin"].includes(user.role);
       if (isManager) {
         const users = await getUsers();
-        res.status(200).send(users);
+        return res.status(200).send(users);
       }
 
       return res.status(401).send({
@@ -60,6 +60,45 @@ userRouter.get(
       console.warn(err);
       res.status(500).send({
         error: "something went wrong"
+      });
+    }
+  }
+);
+
+userRouter.get(
+  "/:id",
+  expressJwt({ secret }),
+  async (req: IExtendedRequest, res) => {
+    try {
+      const id = Number(req.user.id);
+      const user = await getUser(id);
+      if (!user) {
+        return res.status(401).send({
+          error: "no user associated with token"
+        });
+      }
+
+      const isManager = ["manager", "admin"].includes(user.role);
+      if (isManager) {
+        const user = await getUser(Number(req.params.id));
+        if (!user) {
+          return res.status(404).send({
+            error: `no user found for id ${id}`
+          });
+        }
+        const { password, ...userInfo } = user;
+        return res.status(200).send(userInfo);
+      }
+
+      return res.status(401).send({
+        error: "only managers and above can access this endpoint"
+      });
+    } catch (err) {
+      const { message } = err;
+      console.warn(err);
+
+      res.status(500).send({
+        error: message
       });
     }
   }
