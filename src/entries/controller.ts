@@ -8,6 +8,7 @@ import { entrySchema } from "./schema";
 import { createEntry, getEntry, getCityIDFromName } from "./model";
 import { apiKeys } from "../config/config";
 import { CityError } from "../common/errors";
+import { createUserHandler } from "users/user_handler";
 
 const { secret } = jwtConfig;
 export const entryRouter = express.Router();
@@ -43,6 +44,7 @@ entryRouter.post(
   "/",
   expressJwt({ secret }),
   createValidator(entrySchema),
+  createUserHandler(),
   async (req: IExtendedRequest, res) => {
     try {
       const cityID =
@@ -76,6 +78,7 @@ entryRouter.post(
 entryRouter.get(
   "/:id",
   expressJwt({ secret }),
+  createUserHandler(),
   async (req: IExtendedRequest, res) => {
     try {
       const id = Number(req.params.id);
@@ -86,7 +89,7 @@ entryRouter.get(
         });
       }
 
-      if (req.user.id !== data.user.id) {
+      if (req.userInfo.id !== data.user.id) {
         return res.status(401).send({
           error: "your id does not match entry owner's user id"
         });

@@ -29,6 +29,11 @@ function tokenHandler(err, req, res, next) {
   next();
 }
 
+function errorHandler(err, req, res, next) {
+  console.warn(err);
+  res.status(500).send("something went wrong");
+}
+
 app.use(logger);
 app.use(bodyParser.json());
 app.use("/login", loginRouter);

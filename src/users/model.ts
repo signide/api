@@ -10,7 +10,7 @@ export interface IUser {
   role: Role;
 }
 
-type Role = "regular" | "manager" | "admin";
+export type Role = "regular" | "manager" | "admin";
 
 export async function createUser(
   user: IUser,
