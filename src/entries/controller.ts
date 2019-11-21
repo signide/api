@@ -87,7 +87,7 @@ entryRouter.get(
         });
       }
 
-      if (req.userInfo.id !== data.user.id) {
+      if (req.userInfo.id !== data.user.id && req.userInfo.role !== "admin") {
         return res.status(401).send({
           error: "your id does not match entry owner's user id"
         });
