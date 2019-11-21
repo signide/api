@@ -41,14 +41,14 @@ export async function getUsers(
 }
 
 export async function getUser(id: number): Promise<IUser | void> {
-  const text = `${baseQuery} WHERE id=$1`;
+  const text = `${baseQuery} WHERE id = $1`;
   const values = [id];
   const result = await query(text, values);
   return result.rows[0];
 }
 
 export async function getUserByName(name: string): Promise<IUser | void> {
-  const text = `${baseQuery} WHERE username=$1`;
+  const text = `${baseQuery} WHERE username = $1`;
   const values = [name];
   const result = await query(text, values);
   return result.rows[0];

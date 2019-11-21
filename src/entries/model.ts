@@ -16,6 +16,12 @@ const nestSchema: NestSchema = {
   humidity: ["weather", "humidity"]
 };
 
+interface IAverage {
+  speed: number;
+  distance: number;
+  duration: number;
+}
+
 interface IWeather {
   wind?: number;
   temp?: number;
@@ -96,7 +102,7 @@ RETURNING *
   return nest(result.rows[0], nestSchema);
 }
 
-export async function getEntry(id: number): Promise<Dictionary<any>> {
+export async function getEntry(id: number): Promise<Dictionary<any> | void> {
   const text = `
 SELECT
   entries.id,
@@ -126,4 +132,26 @@ WHERE
     return;
   }
   return nest(result.rows[0], nestSchema);
+}
+
+export async function getAverages(userID: number): Promise<IAverage | void> {
+  const text = `
+SELECT AVG(distance) AS distance, AVG(duration) AS duration
+FROM entries WHERE date > NOW()::date - 7
+AND user_id = $1;
+  `;
+  const values = [userID];
+  const result = await query(text, values);
+  if (result.rows[0] == null) {
+    return;
+  }
+
+  const distance = Number(result.rows[0].distance);
+  const duration = Number(result.rows[0].duration);
+  const speed = distance / 1000 / (duration / 3600);
+  return {
+    distance,
+    duration,
+    speed
+  };
 }

@@ -3,11 +3,13 @@ import { Role, getUser } from "./model";
 import { IExtendedRequest } from "../common/request.interface";
 
 export function createUserHandler(
-  requiredRole: Role = "regular"
+  requiredRole: Role = "regular",
+  allowMatchingID?: boolean
 ): RequestHandler {
   return async (req: IExtendedRequest, res, next) => {
     try {
-      const user = await getUser(Number(req.user.id));
+      const id = Number(req.user.id);
+      const user = await getUser(id);
       if (!user) {
         return res.status(401).send({
           error: "no user associated with token"
@@ -15,11 +17,15 @@ export function createUserHandler(
       }
 
       const roles = ["regular", "manager", "admin"];
-      const authorized =
+      const authorizedRole =
         roles.indexOf(user.role) >= roles.indexOf(requiredRole);
-      if (!authorized) {
+      const authorizedID = allowMatchingID
+        ? Number(req.params.id) === user.id
+        : false;
+
+      if (!authorizedRole && !authorizedID) {
         return res.status(401).send({
-          error: `only ${requiredRole}s and above can access this endpoint`
+          error: `only ${requiredRole}(s) and the owner of this resource can access it`
         });
       }
 

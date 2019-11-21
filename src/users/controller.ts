@@ -7,6 +7,7 @@ import { userSchema } from "./schema";
 import { jwtConfig } from "../config/config";
 import { IExtendedRequest } from "../common/request.interface";
 import { createUserHandler } from "./user_handler";
+import { getAverages } from "../entries/model";
 
 const { secret } = jwtConfig;
 export const userRouter = express.Router();
@@ -54,7 +55,6 @@ userRouter.get(
   async (req: IExtendedRequest, res, next) => {
     try {
       const { password, ...user } = req.userInfo;
-      throw new Error("beep");
       res.status(200).send(user);
     } catch (err) {
       next(err);
@@ -65,18 +65,41 @@ userRouter.get(
 userRouter.get(
   "/:id",
   expressJwt({ secret }),
-  createUserHandler("manager"),
+  createUserHandler("manager", true),
   async (req: IExtendedRequest, res, next) => {
     try {
       const id = Number(req.params.id);
       const user = await getUser(id);
+
       if (!user) {
         return res.status(404).send({
           error: `no user found for id ${id}`
         });
       }
+
       const { password, ...userInfo } = user;
       return res.status(200).send(userInfo);
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+userRouter.get(
+  "/:id/average",
+  expressJwt({ secret }),
+  createUserHandler("admin", true),
+  async (req: IExtendedRequest, res, next) => {
+    try {
+      const id = Number(req.params.id);
+      const averages = await getAverages(id);
+
+      if (!averages) {
+        return res.status(404).send({
+          error: `no data found for user id ${id}`
+        });
+      }
+      res.status(200).send(averages);
     } catch (err) {
       next(err);
     }
