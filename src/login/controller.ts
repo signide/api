@@ -3,11 +3,12 @@ import jwt from "jsonwebtoken";
 import { jwtConfig } from "../config/config";
 import { getUserByName } from "../users/model";
 import { compare } from "../common/hashing";
+import { checkJSONHeader } from "../common/check_header";
 
 const { secret } = jwtConfig;
 export const loginRouter = express.Router();
 
-loginRouter.post("/", async (req, res) => {
+loginRouter.post("/", checkJSONHeader, async (req, res) => {
   const user = await getUserByName(req.body.username);
   if (!user) {
     return res.status(404).send({

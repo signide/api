@@ -8,31 +8,37 @@ import { jwtConfig } from "../config/config";
 import { IExtendedRequest } from "../common/request.interface";
 import { createUserHandler } from "./user_handler";
 import { getAverages } from "../entries/model";
+import { checkJSONHeader } from "../common/check_header";
 
 const { secret } = jwtConfig;
 export const userRouter = express.Router();
 
-userRouter.post("/", createValidator(userSchema), async (req, res, next) => {
-  try {
-    const { id, username } = await createUser(req.body);
-    const token = jwt.sign({ id, username }, secret, {
-      expiresIn: 86400
-    });
-
-    res.status(201).send({ auth: true, token });
-  } catch (err) {
-    if (err.message.includes("duplicate")) {
-      const [_, type] = err.detail.match(/\(([^\)]+)\)/);
-      const message = `${type} '${req.body[type]}' already exists`;
-      console.warn(err);
-      return res.status(422).send({
-        error: message
+userRouter.post(
+  "/",
+  checkJSONHeader,
+  createValidator(userSchema),
+  async (req, res, next) => {
+    try {
+      const { id, username } = await createUser(req.body);
+      const token = jwt.sign({ id, username }, secret, {
+        expiresIn: 86400
       });
-    }
 
-    next(err);
+      res.status(201).send({ auth: true, token });
+    } catch (err) {
+      if (err.message.includes("duplicate")) {
+        const [_, type] = err.detail.match(/\(([^\)]+)\)/);
+        const message = `${type} '${req.body[type]}' already exists`;
+        console.warn(err);
+        return res.status(422).send({
+          error: message
+        });
+      }
+
+      next(err);
+    }
   }
-});
+);
 
 userRouter.get(
   "/",

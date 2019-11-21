@@ -9,6 +9,7 @@ import { createEntry, getEntry, getCityIDFromName } from "./model";
 import { apiKeys } from "../config/config";
 import { CityError } from "../common/errors";
 import { createUserHandler } from "../users/user_handler";
+import { checkJSONHeader } from "../common/check_header";
 
 const { secret } = jwtConfig;
 export const entryRouter = express.Router();
@@ -42,6 +43,7 @@ async function getWeatherData(id: number): Promise<IWeather> {
 
 entryRouter.post(
   "/",
+  checkJSONHeader,
   expressJwt({ secret }),
   createValidator(entrySchema),
   createUserHandler(),
