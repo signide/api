@@ -11,7 +11,7 @@ import { createUserHandler } from "./user_handler";
 const { secret } = jwtConfig;
 export const userRouter = express.Router();
 
-userRouter.post("/", createValidator(userSchema), async (req, res) => {
+userRouter.post("/", createValidator(userSchema), async (req, res, next) => {
   try {
     const { id, username } = await createUser(req.body);
     const token = jwt.sign({ id, username }, secret, {
@@ -29,10 +29,7 @@ userRouter.post("/", createValidator(userSchema), async (req, res) => {
       });
     }
 
-    console.warn(err);
-    res.status(500).send({
-      error: "something went wrong"
-    });
+    next(err);
   }
 });
 
@@ -40,15 +37,12 @@ userRouter.get(
   "/",
   expressJwt({ secret }),
   createUserHandler("manager"),
-  async (req: IExtendedRequest, res) => {
+  async (req: IExtendedRequest, res, next) => {
     try {
       const users = await getUsers();
       return res.status(200).send(users);
     } catch (err) {
-      console.warn(err);
-      res.status(500).send({
-        error: "something went wrong"
-      });
+      next(err);
     }
   }
 );
@@ -57,15 +51,13 @@ userRouter.get(
   "/me",
   expressJwt({ secret }),
   createUserHandler(),
-  async (req: IExtendedRequest, res) => {
+  async (req: IExtendedRequest, res, next) => {
     try {
       const { password, ...user } = req.userInfo;
+      throw new Error("beep");
       res.status(200).send(user);
     } catch (err) {
-      console.warn(err);
-      res.status(500).send({
-        error: "something went wrong"
-      });
+      next(err);
     }
   }
 );
@@ -74,7 +66,7 @@ userRouter.get(
   "/:id",
   expressJwt({ secret }),
   createUserHandler("manager"),
-  async (req: IExtendedRequest, res) => {
+  async (req: IExtendedRequest, res, next) => {
     try {
       const id = Number(req.params.id);
       const user = await getUser(id);
@@ -86,10 +78,7 @@ userRouter.get(
       const { password, ...userInfo } = user;
       return res.status(200).send(userInfo);
     } catch (err) {
-      console.warn(err);
-      res.status(500).send({
-        error: "something went wrong"
-      });
+      next(err);
     }
   }
 );

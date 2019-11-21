@@ -8,7 +8,7 @@ import { entrySchema } from "./schema";
 import { createEntry, getEntry, getCityIDFromName } from "./model";
 import { apiKeys } from "../config/config";
 import { CityError } from "../common/errors";
-import { createUserHandler } from "users/user_handler";
+import { createUserHandler } from "../users/user_handler";
 
 const { secret } = jwtConfig;
 export const entryRouter = express.Router();
@@ -45,7 +45,7 @@ entryRouter.post(
   expressJwt({ secret }),
   createValidator(entrySchema),
   createUserHandler(),
-  async (req: IExtendedRequest, res) => {
+  async (req: IExtendedRequest, res, next) => {
     try {
       const cityID =
         req.body.cityID ?? (await getCityIDFromName(req.body.cityName));
@@ -60,17 +60,13 @@ entryRouter.post(
       const entry = await createEntry(data);
       res.status(201).send(entry);
     } catch (err) {
-      console.warn(err);
-
       if (err instanceof CityError) {
+        console.warn(err);
         return res.status(422).send({
           error: err.message
         });
       }
-
-      res.status(500).send({
-        error: "something went wrong"
-      });
+      next(err);
     }
   }
 );
@@ -79,7 +75,7 @@ entryRouter.get(
   "/:id",
   expressJwt({ secret }),
   createUserHandler(),
-  async (req: IExtendedRequest, res) => {
+  async (req: IExtendedRequest, res, next) => {
     try {
       const id = Number(req.params.id);
       const data = await getEntry(id);
@@ -97,10 +93,7 @@ entryRouter.get(
 
       res.status(200).send(data);
     } catch (err) {
-      console.warn(err);
-      res.status(500).send({
-        error: "something went wrong"
-      });
+      next(err);
     }
   }
 );

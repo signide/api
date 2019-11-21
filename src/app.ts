@@ -21,17 +21,14 @@ const errorLogger = expressWinston.errorLogger({
   format: winston.format.json()
 });
 
-function tokenHandler(err, req, res, next) {
-  if (err.name === "UnauthorizedError") {
-    console.warn(err);
-    res.status(401).send({ error: err.message });
-  }
-  next();
-}
-
 function errorHandler(err, req, res, next) {
   console.warn(err);
-  res.status(500).send("something went wrong");
+  if (err.name === "UnauthorizedError") {
+    return res.status(401).send({ error: err.message });
+  }
+  res.status(500).send({
+    error: "something went wrong"
+  });
 }
 
 app.use(logger);
@@ -39,7 +36,7 @@ app.use(bodyParser.json());
 app.use("/login", loginRouter);
 app.use("/users", userRouter);
 app.use("/entries", entryRouter);
-app.use(tokenHandler);
 app.use(errorLogger);
+app.use(errorHandler);
 
 export { app };
