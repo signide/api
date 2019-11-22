@@ -1,8 +1,6 @@
 import express from "express";
-import expressJwt from "express-jwt";
 import fetch from "node-fetch";
 import { IExtendedRequest } from "../common/request.interface";
-import { jwtConfig } from "../config/config";
 import { createValidator } from "../common/validation";
 import { entrySchema } from "./schema";
 import { createEntry, getEntry, getCityIDFromName } from "./model";
@@ -10,8 +8,8 @@ import { apiKeys } from "../config/config";
 import { CityError } from "../common/errors";
 import { createUserHandler } from "../users/user_handler";
 import { checkJSONHeader } from "../common/check_header";
+import { jwtHandler } from "./../common/jwt_handler";
 
-const { secret } = jwtConfig;
 export const entryRouter = express.Router();
 
 interface IWeather {
@@ -44,7 +42,7 @@ async function getWeatherData(id: number): Promise<IWeather> {
 entryRouter.post(
   "/",
   checkJSONHeader,
-  expressJwt({ secret }),
+  jwtHandler,
   createValidator(entrySchema),
   createUserHandler(),
   async (req: IExtendedRequest, res, next) => {
@@ -75,7 +73,7 @@ entryRouter.post(
 
 entryRouter.get(
   "/:id",
-  expressJwt({ secret }),
+  jwtHandler,
   createUserHandler(),
   async (req: IExtendedRequest, res, next) => {
     try {

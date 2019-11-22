@@ -1,16 +1,16 @@
 import express from "express";
 import jwt from "jsonwebtoken";
-import expressJwt from "express-jwt";
 import { createUser, getUser, getUsers } from "./model";
 import { createValidator } from "../common/validation";
 import { userSchema } from "./schema";
-import { jwtConfig } from "../config/config";
 import { IExtendedRequest } from "../common/request.interface";
 import { createUserHandler } from "./user_handler";
 import { getAverages } from "../entries/model";
 import { checkJSONHeader } from "../common/check_header";
+import { jwtConfig } from "../config/config";
+import { jwtHandler } from "../common/jwt_handler";
 
-const { secret } = jwtConfig;
+const { secret, tokenExpireTime } = jwtConfig;
 export const userRouter = express.Router();
 
 userRouter.post(
@@ -21,7 +21,7 @@ userRouter.post(
     try {
       const { id, username } = await createUser(req.body);
       const token = jwt.sign({ id, username }, secret, {
-        expiresIn: 86400
+        expiresIn: tokenExpireTime
       });
 
       res.status(201).send({ auth: true, token });
@@ -42,7 +42,7 @@ userRouter.post(
 
 userRouter.get(
   "/",
-  expressJwt({ secret }),
+  jwtHandler,
   createUserHandler("manager"),
   async (req: IExtendedRequest, res, next) => {
     try {
@@ -56,7 +56,7 @@ userRouter.get(
 
 userRouter.get(
   "/me",
-  expressJwt({ secret }),
+  jwtHandler,
   createUserHandler(),
   async (req: IExtendedRequest, res, next) => {
     try {
@@ -70,7 +70,7 @@ userRouter.get(
 
 userRouter.get(
   "/:id",
-  expressJwt({ secret }),
+  jwtHandler,
   createUserHandler("manager", true),
   async (req: IExtendedRequest, res, next) => {
     try {
@@ -93,7 +93,7 @@ userRouter.get(
 
 userRouter.get(
   "/:id/average",
-  expressJwt({ secret }),
+  jwtHandler,
   createUserHandler("admin", true),
   async (req: IExtendedRequest, res, next) => {
     try {
