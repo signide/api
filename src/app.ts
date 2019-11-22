@@ -2,9 +2,9 @@ import express from "express";
 import bodyParser from "body-parser";
 import winston from "winston";
 import expressWinston from "express-winston";
-import { userRouter } from "./users/controller";
-import { entryRouter } from "./entries/controller";
-import { loginRouter } from "./login/controller";
+import { userRouter } from "./routes/users/controller";
+import { entryRouter } from "./routes/entries/controller";
+import { loginRouter } from "./routes/login/controller";
 
 const app = express();
 

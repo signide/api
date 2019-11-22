@@ -1,9 +1,9 @@
 import express from "express";
 import jwt from "jsonwebtoken";
-import { jwtConfig } from "../config/config";
+import { checkJSONHeader } from "../../middleware/header_checker";
 import { getUserByName } from "../users/model";
-import { compare } from "../common/hashing";
-import { checkJSONHeader } from "../common/check_header";
+import { jwtConfig } from "../../config/config";
+import { compare } from "../../utility/hashing";
 
 const { secret } = jwtConfig;
 export const loginRouter = express.Router();

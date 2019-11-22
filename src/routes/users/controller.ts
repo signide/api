@@ -1,14 +1,14 @@
 import express from "express";
 import jwt from "jsonwebtoken";
 import { createUser, getUser, getUsers } from "./model";
-import { createValidator } from "../common/validation";
 import { userSchema } from "./schema";
-import { IExtendedRequest } from "../common/request.interface";
-import { createUserHandler } from "./user_handler";
+import { createUserHandler } from "../../middleware/user_handler";
+import { jwtHandler } from "../../middleware/jwt_handler";
+import { createValidator } from "../../middleware/validator";
+import { checkJSONHeader } from "../../middleware/header_checker";
+import { IExtendedRequest } from "../../types/extended_request";
 import { getAverages } from "../entries/model";
-import { checkJSONHeader } from "../common/check_header";
-import { jwtConfig } from "../config/config";
-import { jwtHandler } from "../common/jwt_handler";
+import { jwtConfig } from "../../config/config";
 
 const { secret, tokenExpireTime } = jwtConfig;
 export const userRouter = express.Router();

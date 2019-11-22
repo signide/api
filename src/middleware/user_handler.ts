@@ -1,6 +1,6 @@
 import { RequestHandler } from "express";
-import { Role, getUser } from "./model";
-import { IExtendedRequest } from "../common/request.interface";
+import { Role, getUser } from "../routes/users/model";
+import { IExtendedRequest } from "../types/extended_request";
 
 export function createUserHandler(
   requiredRole: Role = "regular",

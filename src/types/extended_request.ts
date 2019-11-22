@@ -1,6 +1,6 @@
-import { Dictionary } from "./utility_types";
 import { Request } from "express";
-import { IUser } from "../users/model";
+import { Dictionary } from "./utility";
+import { IUser } from "../routes/users/model";
 
 export interface IExtendedRequest extends Request {
   user?: Dictionary<any>; // from expressJWT

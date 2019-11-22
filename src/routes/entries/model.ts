@@ -1,8 +1,7 @@
-import { Dictionary } from "../common/utility_types";
-import { query } from "../db/query";
-import { RequireAtLeastOne } from "../common/utility_types";
-import { nest, NestSchema } from "../common/nesting";
-import { CityError } from "../common/errors";
+import { query } from "../../db/query";
+import { RequireAtLeastOne, Dictionary } from "../../types/utility";
+import { CityError } from "../../types/city_error";
+import { nest, NestSchema } from "../../utility/nesting";
 
 const nestSchema: NestSchema = {
   city_id: ["city", "id"],

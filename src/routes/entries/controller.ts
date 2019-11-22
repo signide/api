@@ -1,14 +1,14 @@
 import express from "express";
 import fetch from "node-fetch";
-import { IExtendedRequest } from "../common/request.interface";
-import { createValidator } from "../common/validation";
-import { entrySchema } from "./schema";
 import { createEntry, getEntry, getCityIDFromName } from "./model";
-import { apiKeys } from "../config/config";
-import { CityError } from "../common/errors";
-import { createUserHandler } from "../users/user_handler";
-import { checkJSONHeader } from "../common/check_header";
-import { jwtHandler } from "./../common/jwt_handler";
+import { entrySchema } from "./schema";
+import { createValidator } from "../../middleware/validator";
+import { checkJSONHeader } from "../../middleware/header_checker";
+import { jwtHandler } from "../../middleware/jwt_handler";
+import { createUserHandler } from "../../middleware/user_handler";
+import { CityError } from "../../types/city_error";
+import { IExtendedRequest } from "../../types/extended_request";
+import { apiKeys } from "../../config/config";
 
 export const entryRouter = express.Router();
 

@@ -1,4 +1,4 @@
-import { Dictionary } from "./utility_types";
+import { Dictionary } from "../types/utility";
 
 export type NestSchema = Dictionary<[string, string]>;
 

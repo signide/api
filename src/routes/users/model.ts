@@ -1,6 +1,6 @@
-import { query } from "../db/query";
-import { createHash } from "../common/hashing";
-import { without } from "../common/without";
+import { query } from "../../db/query";
+import { createHash } from "../../utility/hashing";
+import { without } from "../../utility/without";
 
 export interface IUser {
   id: number;
