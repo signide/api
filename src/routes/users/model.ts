@@ -53,3 +53,29 @@ export async function getUserByName(name: string): Promise<IUser | void> {
   const result = await query(text, values);
   return result.rows[0];
 }
+
+export async function updateUser(
+  userID: number,
+  toUpdate: Partial<Omit<IUser, "id">>
+): Promise<IUser | void> {
+  const entries = Object.entries(toUpdate);
+  if (entries.length === 0) {
+    return;
+  }
+
+  const fields = [];
+  const values: any[] = [userID];
+  entries.forEach((entry, index) => {
+    const [key, value] = entry;
+    fields.push(`${key} = $${index + 2}`);
+    values.push(value);
+  });
+
+  const text = `
+UPDATE users SET updated_on = NOW(), ${fields.join(", ")}
+WHERE id = $1
+RETURNING *
+  `;
+  const result = await query(text, values);
+  return result.rows[0];
+}

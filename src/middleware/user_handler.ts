@@ -3,7 +3,7 @@ import { Role, getUser } from "../routes/users/model";
 import { IExtendedRequest } from "../types/extended_request";
 
 export function createUserHandler(
-  requiredRole: Role = "regular",
+  requiredRole: Role | "self" = "regular",
   allowMatchingID?: boolean
 ): RequestHandler {
   return async (req: IExtendedRequest, res, next) => {
@@ -19,11 +19,15 @@ export function createUserHandler(
       const roles = ["regular", "manager", "admin"];
       const authorizedRole =
         roles.indexOf(user.role) >= roles.indexOf(requiredRole);
-      const authorizedID = allowMatchingID
-        ? Number(req.params.id) === user.id
-        : false;
+      const authorizedID = Number(req.params.id) === user.id;
 
-      if (!authorizedRole && !authorizedID) {
+      if (requiredRole === "self" && !authorizedID) {
+        return res.status(401).send({
+          error: `only the owner of this resource can access it`
+        });
+      }
+
+      if (!authorizedRole && !(allowMatchingID ? authorizedID : false)) {
         return res.status(401).send({
           error: `only ${requiredRole}(s) and the owner of this resource can access it`
         });

@@ -1,7 +1,7 @@
 import express from "express";
 import jwt from "jsonwebtoken";
-import { createUser, getUser, getUsers } from "./model";
-import { userSchema } from "./schema";
+import { createUser, getUser, getUsers, updateUser } from "./model";
+import { userSchema, partialUserSchema } from "./schema";
 import { createUserHandler } from "../../middleware/user_handler";
 import { jwtHandler } from "../../middleware/jwt_handler";
 import { createValidator } from "../../middleware/validator";
@@ -9,6 +9,7 @@ import { checkJSONHeader } from "../../middleware/header_checker";
 import { IExtendedRequest } from "../../types/extended_request";
 import { getAverages } from "../entries/model";
 import { jwtConfig } from "../../config/config";
+import { createHash } from "../../utility/hashing";
 
 const { secret, tokenExpireTime } = jwtConfig;
 export const userRouter = express.Router();
@@ -106,6 +107,35 @@ userRouter.get(
         });
       }
       res.status(200).send(averages);
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+userRouter.patch(
+  "/:id",
+  checkJSONHeader,
+  jwtHandler,
+  createValidator(partialUserSchema),
+  createUserHandler("self"),
+  async (req: IExtendedRequest, res, next) => {
+    try {
+      const id = Number(req.params.id);
+      const { ...toUpdate } = req.body;
+      if (toUpdate.password) {
+        toUpdate.password = await createHash(toUpdate.password);
+      }
+      const user = await updateUser(id, toUpdate);
+
+      if (!user) {
+        return res.status(404).send({
+          error: `no user found for id ${id}`
+        });
+      }
+
+      const { password, ...userInfo } = user;
+      res.status(200).send(userInfo);
     } catch (err) {
       next(err);
     }
