@@ -27,12 +27,22 @@ userRouter.post(
   createValidator(userSchema),
   async (req, res, next) => {
     try {
-      const { id, username } = await createUser(req.body);
+      const user = await createUser(req.body);
+      const { id, username, email, role } = user;
       const token = jwt.sign({ id, username }, secret, {
         expiresIn: tokenExpireTime
       });
 
-      res.status(201).send({ auth: true, token });
+      res.status(201).send({
+        auth: true,
+        token,
+        user: {
+          id,
+          username,
+          email,
+          role
+        }
+      });
     } catch (err) {
       if (err.message.includes("duplicate")) {
         const [_, type] = err.detail.match(/\(([^\)]+)\)/);
