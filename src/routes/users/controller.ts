@@ -1,7 +1,7 @@
 import express from "express";
 import jwt from "jsonwebtoken";
-import { createUser, getUser, getUsers, updateUser } from "./model";
-import { userSchema, partialUserSchema } from "./schema";
+import { createUser, getUser, getUsers, updateUser, IUser } from "./model";
+import { userSchema, updateUserSchema } from "./schema";
 import { createUserHandler } from "../../middleware/user_handler";
 import { jwtHandler } from "../../middleware/jwt_handler";
 import { createValidator } from "../../middleware/validator";
@@ -9,7 +9,7 @@ import { checkJSONHeader } from "../../middleware/header_checker";
 import { IExtendedRequest } from "../../types/extended_request";
 import { getAverages } from "../entries/model";
 import { jwtConfig } from "../../config/config";
-import { createHash } from "../../utility/hashing";
+import { createHash, compare } from "../../utility/hashing";
 
 const { secret, tokenExpireTime } = jwtConfig;
 export const userRouter = express.Router();
@@ -117,23 +117,28 @@ userRouter.patch(
   "/:id",
   checkJSONHeader,
   jwtHandler,
-  createValidator(partialUserSchema),
+  createValidator(updateUserSchema),
   createUserHandler("self"),
   async (req: IExtendedRequest, res, next) => {
     try {
-      const id = Number(req.params.id);
       const { ...toUpdate } = req.body;
-      if (toUpdate.password) {
+      const pass = toUpdate.password;
+      if (pass) {
+        const matched = await compare(
+          toUpdate.oldPassword,
+          req.userInfo.password
+        );
+        if (!matched) {
+          return res.status(401).send({
+            error: `incorrect oldPassword for id ${req.userInfo.id}`
+          });
+        }
+
         toUpdate.password = await createHash(toUpdate.password);
-      }
-      const user = await updateUser(id, toUpdate);
-
-      if (!user) {
-        return res.status(404).send({
-          error: `no user found for id ${id}`
-        });
+        delete toUpdate.oldPassword;
       }
 
+      const user = <IUser>await updateUser(req.userInfo.id, toUpdate);
       const { password, ...userInfo } = user;
       res.status(200).send(userInfo);
     } catch (err) {

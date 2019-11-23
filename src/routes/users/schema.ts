@@ -13,7 +13,13 @@ const fields = {
   email: Joi.string().email()
 };
 
-export const partialUserSchema = Joi.object(fields);
+export const updateUserSchema = Joi.object(fields)
+  .append({
+    oldPassword: Joi.string()
+      .min(8)
+      .max(150)
+  })
+  .with("password", "oldPassword");
 
 export const userSchema = Joi.object(
   Object.entries(fields).reduce((acc, curr) => {
