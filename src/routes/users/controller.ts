@@ -1,6 +1,13 @@
 import express from "express";
 import jwt from "jsonwebtoken";
-import { createUser, getUser, getUsers, updateUser, IUser } from "./model";
+import {
+  createUser,
+  getUser,
+  getUsers,
+  updateUser,
+  IUser,
+  deleteUser
+} from "./model";
 import { userSchema, updateUserSchema } from "./schema";
 import { createUserHandler } from "../../middleware/user_handler";
 import { jwtHandler } from "../../middleware/jwt_handler";
@@ -140,6 +147,28 @@ userRouter.patch(
 
       const user = <IUser>await updateUser(req.userInfo.id, toUpdate);
       const { password, ...userInfo } = user;
+      res.status(200).send(userInfo);
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+userRouter.delete(
+  "/:id",
+  jwtHandler,
+  createUserHandler("admin"),
+  async (req, res, next) => {
+    try {
+      const id = Number(req.params.id);
+      const deleted = await deleteUser(id);
+      if (!deleted) {
+        return res.status(404).send({
+          error: `no user found for id ${id}`
+        });
+      }
+
+      const { password, ...userInfo } = deleted;
       res.status(200).send(userInfo);
     } catch (err) {
       next(err);

@@ -79,3 +79,10 @@ RETURNING *
   const result = await query(text, values);
   return result.rows[0];
 }
+
+export async function deleteUser(id: number): Promise<IUser | void> {
+  const text = "DELETE FROM users WHERE id = $1 RETURNING *";
+  const values = [id];
+  const result = await query(text, values);
+  return result.rows[0];
+}

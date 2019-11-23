@@ -27,7 +27,13 @@ export function createUserHandler(
         });
       }
 
-      if (!authorizedRole && !(allowMatchingID ? authorizedID : false)) {
+      if (!authorizedRole) {
+        if (!allowMatchingID) {
+          return res.status(401).send({
+            error: `only ${requiredRole}(s) can access this resource`
+          });
+        }
+
         return res.status(401).send({
           error: `only ${requiredRole}(s) and the owner of this resource can access it`
         });
