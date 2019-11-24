@@ -39,7 +39,7 @@ interface BaseEntry {
   weather?: IWeather;
 }
 
-type IEntry = RequireAtLeastOne<BaseEntry, "cityID" | "cityName">;
+export type IEntry = RequireAtLeastOne<BaseEntry, "cityID" | "cityName">;
 
 const cityNameIdMap: Dictionary<string> = {};
 
@@ -61,7 +61,7 @@ export async function getCityIDFromName(name: string): Promise<string> {
   return cityID;
 }
 
-export async function createEntry(entry: IEntry): Promise<IEntry> {
+export async function createEntry(entry: IEntry): Promise<Dictionary<any>> {
   const text = `
 INSERT INTO entries (
   created_on,
@@ -155,12 +155,12 @@ AND user_id = $1;
   };
 }
 
-export async function getEntries(): Promise<IEntry[]> {
+export async function getEntries(): Promise<Dictionary<any>[]> {
   const result = await query(selectAllQuery);
   return result.rows.map(entry => nest(entry, nestSchema));
 }
 
-export async function deleteEntry(id: number): Promise<IEntry | void> {
+export async function deleteEntry(id: number): Promise<Dictionary<any> | void> {
   const text = "DELETE FROM entries WHERE id = $1 RETURNING *";
   const values = [id];
   const result = await query(text, values);

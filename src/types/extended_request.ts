@@ -4,5 +4,6 @@ import { IUser } from "../routes/users/model";
 
 export interface IExtendedRequest extends Request {
   user?: Dictionary<any>; // from expressJWT
-  userInfo?: IUser; // from createUserHandler middleware
+  userInfo?: IUser; // from createUserHandler and createEntryHandler middleware
+  entryInfo?: Dictionary<any>; // from createEntryHandler middleware
 }

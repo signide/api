@@ -13,7 +13,7 @@ export interface IUser {
 export type Role = "regular" | "manager" | "admin";
 
 export async function createUser(
-  user: IUser,
+  user: Omit<IUser, "id" | "role">,
   role: Role = "regular"
 ): Promise<IUser> {
   const hash = await createHash(user.password);

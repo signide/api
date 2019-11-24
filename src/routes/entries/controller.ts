@@ -2,7 +2,6 @@ import express from "express";
 import fetch from "node-fetch";
 import {
   createEntry,
-  getEntry,
   getCityIDFromName,
   getEntries,
   deleteEntry
@@ -11,7 +10,10 @@ import { entrySchema } from "./schema";
 import { createValidator } from "../../middleware/validator";
 import { checkJSONHeader } from "../../middleware/header_checker";
 import { jwtHandler } from "../../middleware/jwt_handler";
-import { createUserHandler } from "../../middleware/user_handler";
+import {
+  createUserHandler,
+  createEntryHandler
+} from "../../middleware/user_handler";
 import { CityError } from "../../types/city_error";
 import { IExtendedRequest } from "../../types/extended_request";
 import { apiKeys } from "../../config/config";
@@ -80,18 +82,10 @@ entryRouter.post(
 entryRouter.get(
   "/:id",
   jwtHandler,
-  createUserHandler("admin", true),
+  createEntryHandler("admin", true),
   async (req: IExtendedRequest, res, next) => {
     try {
-      const id = Number(req.params.id);
-      const data = await getEntry(id);
-      if (!data) {
-        return res.status(404).send({
-          error: `no entry found for id ${id}`
-        });
-      }
-
-      res.status(200).send(data);
+      res.status(200).send(req.entryInfo);
     } catch (err) {
       next(err);
     }
@@ -121,17 +115,10 @@ entryRouter.get(
 entryRouter.delete(
   "/:id",
   jwtHandler,
-  createUserHandler("admin", true),
+  createEntryHandler("admin", true),
   async (req: IExtendedRequest, res, next) => {
     try {
-      const id = Number(req.params.id);
-      const deleted = await deleteEntry(id);
-      if (!deleted) {
-        return res.status(404).send({
-          error: `no entry found for id ${id}`
-        });
-      }
-
+      const deleted = await deleteEntry(req.entryInfo.id);
       res.status(200).send(deleted);
     } catch (err) {
       next(err);
