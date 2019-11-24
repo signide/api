@@ -74,7 +74,7 @@ entryRouter.post(
 entryRouter.get(
   "/:id",
   jwtHandler,
-  createUserHandler(),
+  createUserHandler("admin", true),
   async (req: IExtendedRequest, res, next) => {
     try {
       const id = Number(req.params.id);
@@ -82,12 +82,6 @@ entryRouter.get(
       if (!data) {
         return res.status(404).send({
           error: `no entry found for id ${id}`
-        });
-      }
-
-      if (req.userInfo.id !== data.user.id && req.userInfo.role !== "admin") {
-        return res.status(401).send({
-          error: "your id does not match entry owner's user id"
         });
       }
 
