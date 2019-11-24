@@ -1,6 +1,12 @@
 import express from "express";
 import fetch from "node-fetch";
-import { createEntry, getEntry, getCityIDFromName, getEntries } from "./model";
+import {
+  createEntry,
+  getEntry,
+  getCityIDFromName,
+  getEntries,
+  deleteEntry
+} from "./model";
 import { entrySchema } from "./schema";
 import { createValidator } from "../../middleware/validator";
 import { checkJSONHeader } from "../../middleware/header_checker";
@@ -106,6 +112,27 @@ entryRouter.get(
       }
 
       res.status(200).send(entries);
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+entryRouter.delete(
+  "/:id",
+  jwtHandler,
+  createUserHandler("admin", true),
+  async (req: IExtendedRequest, res, next) => {
+    try {
+      const id = Number(req.params.id);
+      const deleted = await deleteEntry(id);
+      if (!deleted) {
+        return res.status(404).send({
+          error: `no entry found for id ${id}`
+        });
+      }
+
+      res.status(200).send(deleted);
     } catch (err) {
       next(err);
     }

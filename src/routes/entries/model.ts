@@ -64,18 +64,18 @@ export async function getCityIDFromName(name: string): Promise<string> {
 export async function createEntry(entry: IEntry): Promise<IEntry> {
   const text = `
 INSERT INTO entries (
+  created_on,
   user_id,
   date,
   distance,
   duration,
-  created_on,
   city_id,
   wind_speed,
   temp,
   humidity,
   weather_description
 )
-VALUES ($1, $2, $3, $4, NOW(), $5, $6, $7, $8, $9)
+VALUES (NOW(), $1, $2, $3, $4, $5, $6, $7, $8, $9)
 RETURNING *
   `;
 
@@ -124,11 +124,7 @@ INNER JOIN cities ON entries.city_id = cities.id
 `;
 
 export async function getEntry(id: number): Promise<Dictionary<any> | void> {
-  const text = `
-${selectAllQuery}
-WHERE
-  entries.id = $1;
-`;
+  const text = `${selectAllQuery} WHERE entries.id = $1;`;
   const values = [id];
   const result = await query(text, values);
   if (!result.rows[0]) {
@@ -162,4 +158,14 @@ AND user_id = $1;
 export async function getEntries(): Promise<IEntry[]> {
   const result = await query(selectAllQuery);
   return result.rows.map(entry => nest(entry, nestSchema));
+}
+
+export async function deleteEntry(id: number): Promise<IEntry | void> {
+  const text = "DELETE FROM entries WHERE id = $1 RETURNING *";
+  const values = [id];
+  const result = await query(text, values);
+  if (!result.rows[0]) {
+    return;
+  }
+  return nest(result.rows[0], nestSchema);
 }
