@@ -1,6 +1,6 @@
 import express from "express";
 import fetch from "node-fetch";
-import { createEntry, getEntry, getCityIDFromName } from "./model";
+import { createEntry, getEntry, getCityIDFromName, getEntries } from "./model";
 import { entrySchema } from "./schema";
 import { createValidator } from "../../middleware/validator";
 import { checkJSONHeader } from "../../middleware/header_checker";
@@ -92,6 +92,26 @@ entryRouter.get(
       }
 
       res.status(200).send(data);
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+entryRouter.get(
+  "/",
+  jwtHandler,
+  createUserHandler("admin"),
+  async (req: IExtendedRequest, res, next) => {
+    try {
+      const entries = await getEntries();
+      if (entries.length === 0) {
+        return res.status(404).send({
+          error: "no entries found"
+        });
+      }
+
+      res.status(200).send(entries);
     } catch (err) {
       next(err);
     }

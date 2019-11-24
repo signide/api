@@ -101,27 +101,31 @@ RETURNING *
   return nest(result.rows[0], nestSchema);
 }
 
-export async function getEntry(id: number): Promise<Dictionary<any> | void> {
-  const text = `
+const selectAllQuery = `
 SELECT
-  entries.id,
-  entries.user_id,
-  entries.date,
-  entries.distance,
-  entries.duration,
-  entries.city_id,
-  entries.created_on,
-  entries.wind_speed,
-  entries.temp,
-  entries.humidity,
-  entries.weather_description,
-  users.username AS user_name,
-  cities.name AS city_name,
-  cities.country_code AS country_code
+entries.id,
+entries.user_id,
+entries.date,
+entries.distance,
+entries.duration,
+entries.city_id,
+entries.created_on,
+entries.wind_speed,
+entries.temp,
+entries.humidity,
+entries.weather_description,
+users.username AS user_name,
+cities.name AS city_name,
+cities.country_code AS country_code
 FROM 
-  entries
+entries
 INNER JOIN users ON entries.user_id = users.id
 INNER JOIN cities ON entries.city_id = cities.id
+`;
+
+export async function getEntry(id: number): Promise<Dictionary<any> | void> {
+  const text = `
+${selectAllQuery}
 WHERE
   entries.id = $1;
 `;
@@ -153,4 +157,9 @@ AND user_id = $1;
     duration,
     speed
   };
+}
+
+export async function getEntries(): Promise<IEntry[]> {
+  const result = await query(selectAllQuery);
+  return result.rows.map(entry => nest(entry, nestSchema));
 }
