@@ -9,5 +9,5 @@ I'm learning how to write APIs. This repository houses my progress, almost every
 - [x] Login _-- Achieved on 2019-11-13_
 - [x] Unit tests _-- Achieved on 2019-11-20_
 - [x] Statistics reports _-- Achieved on 2019-11-21_
-- [ ] Multiple roles
+- [x] Multiple roles _-- Achieved on 2019-11-23_
 - [ ] Filtering
