@@ -1,5 +1,12 @@
 import { RequestHandler } from "express";
 
+/**
+ * Creates a middleware that checks the `Content-Type` header
+ * for a particular value.
+ *
+ * @param contentType - The value to check for
+ * @returns The middleware
+ */
 export function checkContentType(contentType: string): RequestHandler {
   return (req, res, next) => {
     const reqContentType = req.get("Content-Type");

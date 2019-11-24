@@ -56,6 +56,15 @@ function checkAuthorization(
   return true;
 }
 
+/**
+ * Creates a middleware that handles the user's JWT data and attaches it to req.userInfo,
+ * and checks if the user is authorized to access the resource.
+ *
+ * @param requiredRole - The required role
+ * @param allowMatchingID - Allows the required role to be overridden if the user's ID
+ * matches the param's ID
+ * @returns The middleware
+ */
 export function createUserHandler(
   requiredRole: RequiredRole = "regular",
   allowMatchingID?: boolean
@@ -86,6 +95,15 @@ export function createUserHandler(
   };
 }
 
+/**
+ * Creates a middleware that handles the entry's data and attaches it to req.entryInfo,
+ * the user's JWT data and attaches it to req.userInfo,
+ * and checks if the user is authorized to access the resource.
+ *
+ * @param requiredRole - The required role
+ * @param allowMatchingID - Allows the required role to be overridden if the user's ID matches the param's ID
+ * @returns The middleware
+ */
 export function createEntryHandler(
   requiredRole: RequiredRole = "regular",
   allowMatchingID?: boolean

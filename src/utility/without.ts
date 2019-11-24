@@ -1,3 +1,11 @@
+/**
+ * Removes each element in 'values' from 'array'.
+ * Throws an error if not all 'values' can be removed;
+ *
+ * @param array - The array
+ * @param values - The values to remove
+ * @returns The new array
+ */
 export function without(array: any[], values: any[]): any[] {
   const copy = [...values];
 

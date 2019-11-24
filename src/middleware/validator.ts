@@ -1,7 +1,13 @@
-import { Schema } from "joi";
+import joi from "joi";
 import { RequestHandler } from "express";
 
-export function createValidator(schema: Schema): RequestHandler {
+/**
+ * Creates a middleware that validates req.body using a joi schema.
+ *
+ * @param schema - The joi schema
+ * @returns The middleware
+ */
+export function createValidator(schema: joi.Schema): RequestHandler {
   return (req, res, next) => {
     const { error } = schema.validate(req.body);
     const valid = error == null;
