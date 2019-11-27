@@ -47,6 +47,10 @@ function checkAuthorization(
       return false;
     }
 
+    if (authorizedID) {
+      return true;
+    }
+
     res.status(401).send({
       error: `only ${requiredRole}(s) and the owner of this resource can access it`
     });
