@@ -11,3 +11,6 @@ I'm learning how to write APIs. This repository houses my progress, almost every
 - [x] Statistics reports _-- Achieved on 2019-11-21_
 - [x] Multiple roles _-- Achieved on 2019-11-23_
 - [ ] Filtering
+- [ ] Test stubs for route dependencies
+- [ ] Caching
+- [ ] Database setup script
