@@ -4,24 +4,26 @@ import { expect } from "chai";
 import { app } from "../app";
 import { query, pool } from "../db/query";
 import {
-  IUser,
   getUserByName,
   deleteUser,
-  createUser
+  createUser,
+  getUser
 } from "../routes/users/model";
+import { getEntry } from "../routes/entries/model";
 
 const jwtRegex = /^.*\..*\..*$/;
 const username = "randomUsername12345";
 const password = faker.internet.password();
 const email = faker.internet.email();
-let token: string;
-let entryId: string;
-let adminToken: string;
-let admin: IUser;
+let userToken;
+let user;
+let entryID;
+let adminToken;
+let admin;
 
 describe("end-to-end testing", () => {
   before(async () => {
-    const user = await createUser(
+    const created = await createUser(
       {
         username: "!@#admin",
         password,
@@ -29,15 +31,15 @@ describe("end-to-end testing", () => {
       },
       "admin"
     );
-    admin = user;
+    admin = created;
   });
 
   after(async () => {
-    const user = await getUserByName(username);
-    if (!user) {
+    const selected = await getUserByName(username);
+    if (!selected) {
       return;
     }
-    const userID = user.id;
+    const userID = selected.id;
     await query("DELETE FROM entries WHERE user_id=$1", [userID]);
     await deleteUser(userID);
     await deleteUser(admin.id);
@@ -52,9 +54,11 @@ describe("end-to-end testing", () => {
         password,
         email
       });
+
     expect(response.status).equal(201);
-    token = response.body.token;
-    expect(token).match(jwtRegex);
+    user = response.body.user;
+    userToken = response.body.token;
+    expect(userToken).match(jwtRegex);
   });
 
   it("logs a user in", async () => {
@@ -70,6 +74,21 @@ describe("end-to-end testing", () => {
     expect(adminToken).match(jwtRegex);
   });
 
+  it("changes the user's password", async () => {
+    const response = await request(app)
+      .patch(`/users/${user.id}`)
+      .set("Authorization", `Bearer ${userToken}`)
+      .send({
+        oldPassword: password,
+        password: "bananananana"
+      });
+
+    expect(response.status).equal(200);
+    expect(new Date(response.body.updated_on)).above(
+      new Date(response.body.created_on)
+    );
+  });
+
   it("creates an entry", async () => {
     const entry = {
       date: new Date().toISOString(),
@@ -80,20 +99,40 @@ describe("end-to-end testing", () => {
 
     const response = await request(app)
       .post("/entries")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Authorization", `Bearer ${adminToken}`)
       .send(entry);
 
     expect(response.status).equal(201);
     expect(response.body).to.have.property("id");
-    entryId = response.body.id;
+    entryID = response.body.id;
   });
 
   it("gets an entry", async () => {
     const response = await request(app)
-      .get(`/entries/${entryId}`)
+      .get(`/entries/${entryID}`)
       .set("Authorization", `Bearer ${adminToken}`);
 
     expect(response.status).equal(200);
-    expect(response.body.id).equal(entryId);
+    expect(response.body.id).equal(entryID);
+  });
+
+  it("deletes an entry", async () => {
+    const response = await request(app)
+      .delete(`/entries/${entryID}`)
+      .set("Authorization", `Bearer ${adminToken}`);
+
+    expect(response.status).equal(200);
+    expect(response.body.id).equal(entryID);
+    expect(await getEntry(entryID)).to.be.undefined;
+  });
+
+  it("deletes the user", async () => {
+    const response = await request(app)
+      .delete(`/users/${user.id}`)
+      .set("Authorization", `Bearer ${adminToken}`);
+
+    expect(response.status).equal(200);
+    expect(response.body.id).equal(user.id);
+    expect(await getUser(user.id)).to.be.undefined;
   });
 });
