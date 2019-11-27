@@ -6,7 +6,7 @@
   "author": "kakashi000",
   "license": "MIT",
   "scripts": {
-    "test": "jest --runInBand",
+    "test": "tsc && mocha dist/__tests__/*.js",
     "dev": "ts-node ./src/server.ts",
     "format": "prettier ./src/**/* --write"
   },
