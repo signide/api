@@ -1,7 +1,14 @@
 import request from "supertest";
 import faker from "faker/locale/en";
+import { expect } from "chai";
 import { app } from "../app";
 import { query, pool } from "../db/query";
+import {
+  IUser,
+  getUserByName,
+  deleteUser,
+  createUser
+} from "../routes/users/model";
 
 const jwtRegex = /^.*\..*\..*$/;
 const username = "randomUsername12345";
@@ -9,18 +16,34 @@ const password = faker.internet.password();
 const email = faker.internet.email();
 let token: string;
 let entryId: string;
+let adminToken: string;
+let admin: IUser;
 
-afterAll(async () => {
-  const selectUser = await query("SELECT id FROM users WHERE username=$1", [
-    username
-  ]);
-  const userId = selectUser.rows[0].id;
-  await query("DELETE FROM entries WHERE user_id=$1", [userId]);
-  await query("DELETE FROM users WHERE id=$1", [userId]);
-  await pool.end();
-});
+describe("end-to-end testing", () => {
+  before(async () => {
+    const user = await createUser(
+      {
+        username: "!@#admin",
+        password,
+        email: faker.internet.email()
+      },
+      "admin"
+    );
+    admin = user;
+  });
 
-describe("/users", () => {
+  after(async () => {
+    const user = await getUserByName(username);
+    if (!user) {
+      return;
+    }
+    const userID = user.id;
+    await query("DELETE FROM entries WHERE user_id=$1", [userID]);
+    await deleteUser(userID);
+    await deleteUser(admin.id);
+    await pool.end();
+  });
+
   it("creates a user", async () => {
     const response = await request(app)
       .post("/users")
@@ -29,24 +52,24 @@ describe("/users", () => {
         password,
         email
       });
-    expect(response.status).toBe(201);
-    expect(response.body.token).toMatch(jwtRegex);
+    expect(response.status).equal(201);
+    token = response.body.token;
+    expect(token).match(jwtRegex);
   });
 
   it("logs a user in", async () => {
     const response = await request(app)
       .post("/login")
       .send({
-        username,
+        username: admin.username,
         password
       });
-    expect(response.status).toBe(201);
-    expect(response.body.token).toMatch(jwtRegex);
-    token = response.body.token;
-  });
-});
 
-describe("/entries", () => {
+    expect(response.status).equal(201);
+    adminToken = response.body.token;
+    expect(adminToken).match(jwtRegex);
+  });
+
   it("creates an entry", async () => {
     const entry = {
       date: new Date().toISOString(),
@@ -60,17 +83,17 @@ describe("/entries", () => {
       .set("Authorization", `Bearer ${token}`)
       .send(entry);
 
-    expect(response.status).toBe(201);
-    expect(response.body).toHaveProperty("id");
+    expect(response.status).equal(201);
+    expect(response.body).to.have.property("id");
     entryId = response.body.id;
   });
 
   it("gets an entry", async () => {
     const response = await request(app)
       .get(`/entries/${entryId}`)
-      .set("Authorization", `Bearer ${token}`);
+      .set("Authorization", `Bearer ${adminToken}`);
 
-    expect(response.status).toBe(200);
-    expect(response.body.id).toBe(entryId);
+    expect(response.status).equal(200);
+    expect(response.body.id).equal(entryId);
   });
 });
