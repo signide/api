@@ -1,10 +1,13 @@
 import request from "supertest";
+import sinon from "sinon";
 import faker from "faker/locale/en";
 import { expect } from "chai";
 import { app } from "../app";
 import { query, pool } from "../db/query";
 import { deleteUser, createUser, getUser } from "../routes/users/model";
 import { getEntry, deleteEntry } from "../routes/entries/model";
+import { mockModule } from "./helpers";
+import * as weather from "../routes/entries/get_weather";
 
 const jwtRegex = /^.*\..*\..*$/;
 const username = "TESTuser";
@@ -12,35 +15,56 @@ const adminUsername = "TESTadmin";
 const password = faker.internet.password();
 const email = faker.internet.email();
 
-let userToken;
 let user;
-let entryID;
-let adminToken;
 let admin;
+let userToken;
+let adminToken;
+let entryID;
+
+before(async () => {
+  const result = await query(
+    `SELECT * FROM users WHERE username IN ('${username}', '${adminUsername}')`
+  );
+  result.rows.forEach(async user => await deleteUser(user.id));
+
+  const created = await createUser(
+    {
+      username: adminUsername,
+      password,
+      email: faker.internet.email()
+    },
+    "admin"
+  );
+  admin = created;
+});
+
+after(async () => {
+  await deleteEntry(entryID);
+  await deleteUser(user.id);
+  await deleteUser(admin.id);
+  await pool.end();
+});
 
 describe("end-to-end testing", () => {
-  before(async () => {
-    const result = await query(
-      `SELECT * FROM users WHERE username IN ('${username}', '${adminUsername}')`
-    );
-    result.rows.forEach(async user => await deleteUser(user.id));
-
-    const created = await createUser(
-      {
-        username: adminUsername,
-        password,
-        email: faker.internet.email()
-      },
-      "admin"
-    );
-    admin = created;
+  const mockWeather = mockModule(weather, {
+    getWeatherData: async id => {
+      return {
+        wind: 1,
+        temp: 2,
+        humidity: 3,
+        description: "banana"
+      };
+    }
   });
 
-  after(async () => {
-    await deleteEntry(entryID);
-    await deleteUser(user.id);
-    await deleteUser(admin.id);
-    await pool.end();
+  let sandbox: sinon.SinonSandbox;
+
+  beforeEach(() => {
+    sandbox = sinon.createSandbox();
+  });
+
+  afterEach(() => {
+    sinon.restore();
   });
 
   it("creates a user", async () => {
@@ -114,6 +138,8 @@ describe("end-to-end testing", () => {
   });
 
   it("creates an entry", async () => {
+    mockWeather(sandbox);
+
     const entry = {
       date: new Date().toISOString(),
       duration: faker.random.number(),

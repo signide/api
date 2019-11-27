@@ -1,5 +1,4 @@
 import express from "express";
-import fetch from "node-fetch";
 import {
   createEntry,
   getCityIDFromName,
@@ -16,36 +15,9 @@ import {
 } from "../../middleware/user_handler";
 import { CityError } from "../../types/city_error";
 import { IExtendedRequest } from "../../types/extended_request";
-import { apiKeys } from "../../config/config";
+import { getWeatherData } from "./get_weather";
 
 export const entryRouter = express.Router();
-
-interface IWeather {
-  wind: number;
-  temp: number;
-  humidity: number;
-  description: string;
-}
-
-async function getWeatherData(id: number): Promise<IWeather> {
-  const response = await fetch(
-    `https://api.openweathermap.org/data/2.5/weather?appid=${apiKeys.weather}&id=${id}`
-  );
-
-  const data = await response.json();
-  if (data.cod === "404") {
-    throw new CityError(id);
-  }
-
-  const result = {
-    wind: data.wind?.speed,
-    temp: data.main?.temp,
-    humidity: data.main?.humidity,
-    description: data.weather?.[0].description
-  };
-
-  return result;
-}
 
 entryRouter.post(
   "/",
