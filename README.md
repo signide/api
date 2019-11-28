@@ -10,7 +10,7 @@ I'm learning how to write APIs. This repository houses my progress, almost every
 - [x] Unit tests _-- Achieved on 2019-11-20_
 - [x] Statistics reports _-- Achieved on 2019-11-21_
 - [x] Multiple roles _-- Achieved on 2019-11-23_
+- [x] Test stubs for route dependencies _-- Achieved on 2019-11-27_
 - [ ] Filtering
-- [ ] Test stubs for route dependencies
 - [ ] Caching
 - [ ] Database setup script
