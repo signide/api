@@ -5,6 +5,11 @@ services:
   - postgresql
 
 env:
+  - API_PORT=3000
+  - API_IN_PRODUCTION=true
+  - JWT_SECRET="im a secret"
+  - JWT_EXPIRE_TIME=6h
+  - KEYS_WEATHER=unused
   - TYPEORM_CONNECTION=postgres
   - TYPEORM_HOST=localhost
   - TYPEORM_USERNAME=kashi
