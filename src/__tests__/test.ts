@@ -1,13 +1,15 @@
+import dotenv from "dotenv";
 import request from "supertest";
 import sinon from "sinon";
 import faker from "faker/locale/en";
 import { expect } from "chai";
 import { app } from "../app";
-import { query, pool } from "../db/query";
-import { deleteUser, createUser, getUser } from "../routes/users/model";
-import { getEntry, deleteEntry } from "../routes/entries/model";
+import { getRepository, Repository, createConnection, Connection } from "typeorm";
+import { Entry } from "../entities/entry";
+import { User } from "../entities/user";
 import { mockModule } from "./helpers";
 import * as weather from "../routes/entries/get_weather";
+import { createHash } from "../utility/hashing";
 
 const jwtRegex = /^.*\..*\..*$/;
 const username = "TESTuser";
@@ -15,44 +17,57 @@ const adminUsername = "TESTadmin";
 const password = faker.internet.password();
 const email = faker.internet.email();
 
-let user;
-let admin;
-let userToken;
-let adminToken;
-let entryID;
+let user: User;
+let admin: User;
+let userToken: string;
+let adminToken: string;
+let entryId: string;
+
+let connection: Connection;
+let userRepo: Repository<User>;
+let entryRepo: Repository<Entry>;
 
 before(async () => {
-  const result = await query(
-    `SELECT * FROM users WHERE username IN ('${username}', '${adminUsername}')`
-  );
-  result.rows.forEach(async user => await deleteUser(user.id));
+  dotenv.config();
+  connection = await createConnection({
+    type: "postgres",
+    host: process.env.TYPEORM_HOST,
+    port: Number(process.env.TYPEORM_PORT),
+    username: process.env.TYPEORM_USERNAME,
+    password: process.env.TYPEORM_PASSWORD,
+    database: process.env.TEST_DATABASE,
+    entities: ["src/entities/*.ts", "dist/entities/*.js"]
+  });
+  userRepo = getRepository(User);
+  entryRepo = getRepository(Entry);
+  entryRepo.query("TRUNCATE entries CASCADE");
+  userRepo.query("TRUNCATE users CASCADE");
 
-  const created = await createUser(
-    {
-      username: adminUsername,
-      password,
-      email: faker.internet.email()
-    },
-    "admin"
-  );
-  admin = created;
+  admin = await userRepo.save({
+    username: adminUsername,
+    password: await createHash(password),
+    email: faker.internet.email(),
+    role: "admin"
+  });
 });
 
 after(async () => {
-  await deleteEntry(entryID);
-  await deleteUser(user.id);
-  await deleteUser(admin.id);
-  await pool.end();
+  const userRepo = getRepository(User);
+  const entryRepo = getRepository(Entry);
+  await entryRepo.delete(entryId);
+  await userRepo.delete(user.id);
+  await userRepo.delete(admin.id);
+  await connection.close();
 });
 
 describe("end-to-end testing", () => {
   const mockWeather = mockModule(weather, {
     getWeatherData: async id => {
       return {
-        wind: 1,
+        windSpeed: 1,
         temp: 2,
         humidity: 3,
-        description: "banana"
+        weatherDescription: "banana"
       };
     }
   });
@@ -132,9 +147,7 @@ describe("end-to-end testing", () => {
       });
 
     expect(response.status).equal(200);
-    expect(new Date(response.body.updated_on)).above(
-      new Date(response.body.created_on)
-    );
+    expect(response.body.updatedAt).to.not.equal(response.body.createdAt);
   });
 
   it("creates an entry", async () => {
@@ -154,16 +167,16 @@ describe("end-to-end testing", () => {
 
     expect(response.status).equal(201);
     expect(response.body).to.have.property("id");
-    entryID = response.body.id;
+    entryId = response.body.id;
   });
 
   it("gets an entry", async () => {
     const response = await request(app)
-      .get(`/entries/${entryID}`)
+      .get(`/entries/${entryId}`)
       .set("Authorization", `Bearer ${adminToken}`);
 
     expect(response.status).equal(200);
-    expect(response.body.id).equal(entryID);
+    expect(response.body.id).equal(entryId);
   });
 
   it("gets all entries", async () => {
@@ -186,12 +199,12 @@ describe("end-to-end testing", () => {
 
   it("deletes an entry", async () => {
     const response = await request(app)
-      .delete(`/entries/${entryID}`)
+      .delete(`/entries/${entryId}`)
       .set("Authorization", `Bearer ${adminToken}`);
 
     expect(response.status).equal(200);
-    expect(response.body.id).equal(entryID);
-    expect(await getEntry(entryID)).to.be.undefined;
+    expect(response.body.id).equal(entryId);
+    expect(await entryRepo.findOne(entryId)).to.be.undefined;
   });
 
   it("deletes the user", async () => {
@@ -201,6 +214,6 @@ describe("end-to-end testing", () => {
 
     expect(response.status).equal(200);
     expect(response.body.id).equal(user.id);
-    expect(await getUser(user.id)).to.be.undefined;
+    expect(await entryRepo.findOne(user.id)).to.be.undefined;
   });
 });

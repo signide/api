@@ -9,6 +9,7 @@ export class City {
   name: string;
 
   @Column({
+    name: "country_code",
     type: "varchar",
     length: 2
   })

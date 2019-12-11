@@ -1,8 +1,8 @@
 export class CityError extends Error {
-  name: "CityNameError" | "CityIDError";
+  name: "CityNameError" | "CityIdError";
   type: "name" | "id";
   cityName: string;
-  cityID: number;
+  cityId: number;
 
   constructor(notFound: string | number) {
     super("");
@@ -13,9 +13,9 @@ export class CityError extends Error {
       this.cityName = notFound;
     } else {
       this.message = `unknown city id '${notFound}'`;
-      this.name = "CityIDError";
+      this.name = "CityIdError";
       this.type = "id";
-      this.cityID = notFound;
+      this.cityId = notFound;
     }
   }
 }

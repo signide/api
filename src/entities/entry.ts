@@ -1,4 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from "typeorm";
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  CreateDateColumn,
+  UpdateDateColumn
+} from "typeorm";
 import { User } from "./user";
 import { City } from "./city";
 
@@ -22,7 +29,7 @@ export class Entry {
   @ManyToOne(type => City)
   city: City;
 
-  @Column("double precision")
+  @Column({ name: "wind_speed", type: "double precision" })
   windSpeed: number;
 
   @Column("double precision")
@@ -31,6 +38,12 @@ export class Entry {
   @Column("double precision")
   humidity: number;
 
-  @Column("text")
+  @Column({ name: "weather_description", type: "text" })
   weatherDescription: string;
+
+  @CreateDateColumn({ name: "created_at" })
+  createdAt: Date;
+
+  @UpdateDateColumn({ name: "updated_at" })
+  updatedAt: Date;
 }

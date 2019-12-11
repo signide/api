@@ -1,22 +1,16 @@
 import express from "express";
 import jwt from "jsonwebtoken";
-import {
-  createUser,
-  getUser,
-  getUsers,
-  updateUser,
-  IUser,
-  deleteUser
-} from "./model";
 import { userSchema, updateUserSchema } from "./schema";
 import { createUserHandler } from "../../middleware/user_handler";
 import { jwtHandler } from "../../middleware/jwt_handler";
 import { createValidator } from "../../middleware/validator";
 import { checkJSONHeader } from "../../middleware/header_checker";
-import { IExtendedRequest } from "../../types/extended_request";
-import { getAverages } from "../entries/model";
+import { ExtendedRequest } from "../../types/extended_request";
 import { jwtConfig } from "../../config/config";
 import { createHash, compare } from "../../utility/hashing";
+import { getRepository } from "typeorm";
+import { User } from "../../entities/user";
+import { getAverages } from "../entries/get_averages";
 
 const { secret, tokenExpireTime } = jwtConfig;
 export const userRouter = express.Router();
@@ -27,21 +21,23 @@ userRouter.post(
   createValidator(userSchema),
   async (req, res, next) => {
     try {
-      const user = await createUser(req.body);
-      const { id, username, email, role } = user;
-      const token = jwt.sign({ id, username }, secret, {
+      const repo = getRepository(User);
+      const userInfo = { ...req.body, password: await createHash(req.body.password) };
+      await repo.save(userInfo);
+
+      const user = await repo.findOne({
+        username: req.body.username
+      });
+      const token = jwt.sign({ id: user.id, username: user.username }, secret, {
         expiresIn: tokenExpireTime
       });
+
+      const { password, ...userWithoutPassword } = user;
 
       res.status(201).send({
         auth: true,
         token,
-        user: {
-          id,
-          username,
-          email,
-          role
-        }
+        user: userWithoutPassword
       });
     } catch (err) {
       if (err.message.includes("duplicate")) {
@@ -62,9 +58,10 @@ userRouter.get(
   "/",
   jwtHandler,
   createUserHandler("manager"),
-  async (req: IExtendedRequest, res, next) => {
+  async (req: ExtendedRequest, res, next) => {
     try {
-      const users = await getUsers();
+      const users = await getRepository(User).find();
+      users.forEach(user => delete user.password);
       return res.status(200).send(users);
     } catch (err) {
       next(err);
@@ -76,7 +73,7 @@ userRouter.get(
   "/me",
   jwtHandler,
   createUserHandler(),
-  async (req: IExtendedRequest, res, next) => {
+  async (req: ExtendedRequest, res, next) => {
     try {
       const { password, ...user } = req.userInfo;
       res.status(200).send(user);
@@ -90,14 +87,13 @@ userRouter.get(
   "/:id",
   jwtHandler,
   createUserHandler("manager", true),
-  async (req: IExtendedRequest, res, next) => {
+  async (req: ExtendedRequest, res, next) => {
     try {
-      const id = Number(req.params.id);
-      const user = await getUser(id);
+      const user = await getRepository(User).findOne(req.params.id);
 
       if (!user) {
         return res.status(404).send({
-          error: `no user found for id ${id}`
+          error: `no user found for id ${req.params.id}`
         });
       }
 
@@ -113,14 +109,13 @@ userRouter.get(
   "/:id/average",
   jwtHandler,
   createUserHandler("admin", true),
-  async (req: IExtendedRequest, res, next) => {
+  async (req: ExtendedRequest, res, next) => {
     try {
-      const id = Number(req.params.id);
-      const averages = await getAverages(id);
+      const averages = await getAverages(Number(req.params.id));
 
       if (!averages) {
         return res.status(404).send({
-          error: `no data found for user id ${id}`
+          error: `no data found for user id ${req.params.id}`
         });
       }
       res.status(200).send(averages);
@@ -136,18 +131,16 @@ userRouter.patch(
   jwtHandler,
   createValidator(updateUserSchema),
   createUserHandler("self"),
-  async (req: IExtendedRequest, res, next) => {
+  async (req: ExtendedRequest, res, next) => {
     try {
+      const id = req.userInfo.id;
       const { ...toUpdate } = req.body;
       const pass = toUpdate.password;
       if (pass) {
-        const matched = await compare(
-          toUpdate.oldPassword,
-          req.userInfo.password
-        );
+        const matched = await compare(toUpdate.oldPassword, req.userInfo.password);
         if (!matched) {
           return res.status(401).send({
-            error: `incorrect oldPassword for id ${req.userInfo.id}`
+            error: `incorrect oldPassword for id ${id}`
           });
         }
 
@@ -155,7 +148,9 @@ userRouter.patch(
         delete toUpdate.oldPassword;
       }
 
-      const user = <IUser>await updateUser(req.userInfo.id, toUpdate);
+      const repo = getRepository(User);
+      await repo.update({ id }, toUpdate);
+      const user = await repo.findOne(id);
       const { password, ...userInfo } = user;
       res.status(200).send(userInfo);
     } catch (err) {
@@ -171,14 +166,17 @@ userRouter.delete(
   async (req, res, next) => {
     try {
       const id = Number(req.params.id);
-      const deleted = await deleteUser(id);
-      if (!deleted) {
+      const repo = getRepository(User);
+      const user = await repo.findOne(id);
+      const result = await repo.remove(user);
+      if (user == null) {
         return res.status(404).send({
           error: `no user found for id ${id}`
         });
       }
 
-      const { password, ...userInfo } = deleted;
+      const { password, ...userInfo } = result;
+      userInfo.id = id;
       res.status(200).send(userInfo);
     } catch (err) {
       next(err);

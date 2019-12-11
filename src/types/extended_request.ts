@@ -1,9 +1,9 @@
 import { Request } from "express";
-import { Dictionary } from "./utility";
-import { IUser } from "../routes/users/model";
+import { Entry } from "../entities/entry";
+import { User } from "../entities/user";
 
-export interface IExtendedRequest extends Request {
-  user?: Dictionary<any>; // from expressJWT
-  userInfo?: IUser; // from createUserHandler and createEntryHandler middleware
-  entryInfo?: Dictionary<any>; // from createEntryHandler middleware
+export interface ExtendedRequest extends Request {
+  user?: Pick<User, "id" | "username">; // from expressJWT
+  userInfo?: User; // from createUserHandler and createEntryHandler middleware
+  entryInfo?: Entry; // from createEntryHandler middleware
 }
