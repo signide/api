@@ -1,14 +1,9 @@
-import "reflect-metadata";
 import { expect } from "chai";
 import { Pool, QueryResult } from "pg";
 import { postgresConfig } from "../config/config";
 import { User } from "../entities/user";
-import {
-  getRepository,
-  createConnection,
-  Connection,
-  Repository
-} from "typeorm";
+import { createConnection, Connection, Repository } from "typeorm";
+import { baseConnectionOptions } from "./connection_options";
 
 const testPool = new Pool({
   ...postgresConfig,
@@ -36,8 +31,8 @@ describe("users", () => {
 
   before(async () => {
     await query("DELETE FROM users WHERE username='!user'");
-    connection = await createConnection();
-    userRepository = getRepository(User);
+    connection = await createConnection({ name: "entities", ...baseConnectionOptions });
+    userRepository = connection.getRepository(User);
   });
 
   after(async () => {
@@ -67,9 +62,7 @@ describe("users", () => {
     const password = "!passnew";
     const user = await userRepository.update({ id: testUser.id }, { password });
     expect(user).to.be.ok;
-    expect((await userRepository.findOne(testUser.id)).password).to.equal(
-      password
-    );
+    expect((await userRepository.findOne(testUser.id)).password).to.equal(password);
   });
 
   it("deletes a user", async () => {

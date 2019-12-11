@@ -6,7 +6,7 @@
   "author": "kakashi000",
   "license": "MIT",
   "scripts": {
-    "test": "tsc && mocha dist/__tests__/*.js",
+    "test": "node -r ts-node/register node_modules/mocha/bin/_mocha --colors ./src/__tests__/*.ts",
     "dev": "ts-node ./src/server.ts",
     "format": "prettier ./src/**/* --write"
   },

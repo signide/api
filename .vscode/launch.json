@@ -25,9 +25,9 @@
       "protocol": "inspector",
       "request": "launch",
       "cwd": "${workspaceRoot}",
-      "preLaunchTask": "tsc: build - tsconfig.json",
       "program": "${workspaceRoot}/node_modules/mocha/bin/_mocha",
-      "args": ["--no-timeouts", "--colors", "${workspaceRoot}/dist/__tests__/**/*.js"],
+      "runtimeArgs": ["-r", "ts-node/register"],
+      "args": ["--no-timeouts", "--colors", "${workspaceFolder}/src/__tests__/*.ts"],
       "stopOnEntry": false,
       "runtimeExecutable": null,
       "env": {

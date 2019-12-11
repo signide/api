@@ -1,15 +1,15 @@
-import dotenv from "dotenv";
 import request from "supertest";
 import sinon from "sinon";
 import faker from "faker/locale/en";
 import { expect } from "chai";
 import { app } from "../app";
-import { getRepository, Repository, createConnection, Connection } from "typeorm";
+import { Repository, createConnection, Connection } from "typeorm";
 import { Entry } from "../entities/entry";
 import { User } from "../entities/user";
 import { mockModule } from "./helpers";
 import * as weather from "../routes/entries/get_weather";
 import { createHash } from "../utility/hashing";
+import { baseConnectionOptions } from "./connection_options";
 
 const jwtRegex = /^.*\..*\..*$/;
 const username = "TESTuser";
@@ -27,40 +27,29 @@ let connection: Connection;
 let userRepo: Repository<User>;
 let entryRepo: Repository<Entry>;
 
-before(async () => {
-  dotenv.config();
-  connection = await createConnection({
-    type: "postgres",
-    host: process.env.TYPEORM_HOST,
-    port: Number(process.env.TYPEORM_PORT),
-    username: process.env.TYPEORM_USERNAME,
-    password: process.env.TYPEORM_PASSWORD,
-    database: process.env.TEST_DATABASE,
-    entities: ["src/entities/*.ts", "dist/entities/*.js"]
-  });
-  userRepo = getRepository(User);
-  entryRepo = getRepository(Entry);
-  entryRepo.query("TRUNCATE entries CASCADE");
-  userRepo.query("TRUNCATE users CASCADE");
-
-  admin = await userRepo.save({
-    username: adminUsername,
-    password: await createHash(password),
-    email: faker.internet.email(),
-    role: "admin"
-  });
-});
-
-after(async () => {
-  const userRepo = getRepository(User);
-  const entryRepo = getRepository(Entry);
-  await entryRepo.delete(entryId);
-  await userRepo.delete(user.id);
-  await userRepo.delete(admin.id);
-  await connection.close();
-});
-
 describe("end-to-end testing", () => {
+  before(async () => {
+    connection = await createConnection({ name: "test", ...baseConnectionOptions });
+    userRepo = connection.getRepository(User);
+    entryRepo = connection.getRepository(Entry);
+    entryRepo.query("TRUNCATE entries CASCADE");
+    userRepo.query("TRUNCATE users CASCADE");
+
+    admin = await userRepo.save({
+      username: adminUsername,
+      password: await createHash(password),
+      email: faker.internet.email(),
+      role: "admin"
+    });
+  });
+
+  after(async () => {
+    await entryRepo.delete(entryId);
+    await userRepo.delete(user.id);
+    await userRepo.delete(admin.id);
+    await connection.close();
+  });
+
   const mockWeather = mockModule(weather, {
     getWeatherData: async id => {
       return {
