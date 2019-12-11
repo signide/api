@@ -6,13 +6,11 @@ import { jwtHandler } from "../../middleware/jwt_handler";
 import { createValidator } from "../../middleware/validator";
 import { checkJSONHeader } from "../../middleware/header_checker";
 import { ExtendedRequest } from "../../types/extended_request";
-import { jwtConfig } from "../../config/config";
 import { createHash, compare } from "../../utility/hashing";
 import { getRepository } from "typeorm";
 import { User } from "../../entities/user";
 import { getAverages } from "../entries/get_averages";
 
-const { secret, tokenExpireTime } = jwtConfig;
 export const userRouter = express.Router();
 
 userRouter.post(
@@ -28,9 +26,13 @@ userRouter.post(
       const user = await repo.findOne({
         username: req.body.username
       });
-      const token = jwt.sign({ id: user.id, username: user.username }, secret, {
-        expiresIn: tokenExpireTime
-      });
+      const token = jwt.sign(
+        { id: user.id, username: user.username },
+        process.env.JWT_SECRET,
+        {
+          expiresIn: process.env.JWT_EXPIRE_TIME
+        }
+      );
 
       const { password, ...userWithoutPassword } = user;
 

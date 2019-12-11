@@ -1,5 +1,4 @@
 import fetch from "node-fetch";
-import { apiKeys } from "../../config/config";
 import { CityError } from "../../types/city_error";
 
 interface WeatherInfo {
@@ -11,7 +10,7 @@ interface WeatherInfo {
 
 export async function getWeatherData(id: number | string): Promise<WeatherInfo> {
   const response = await fetch(
-    `https://api.openweathermap.org/data/2.5/weather?appid=${apiKeys.weather}&id=${id}`
+    `https://api.openweathermap.org/data/2.5/weather?appid=${process.env.KEYS_WEATHER}&id=${id}`
   );
 
   const data = await response.json();

@@ -1,8 +1,7 @@
 import { createConnection } from "typeorm";
 import { app } from "./app";
-import { apiConfig } from "./config/config";
 
-const { port } = apiConfig;
+const port = process.env.API_PORT;
 
 async function main() {
   await createConnection();

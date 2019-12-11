@@ -3,10 +3,8 @@ import jwt from "jsonwebtoken";
 import { getRepository } from "typeorm";
 import { User } from "../../entities/user";
 import { checkJSONHeader } from "../../middleware/header_checker";
-import { jwtConfig } from "../../config/config";
 import { compare } from "../../utility/hashing";
 
-const { secret } = jwtConfig;
 export const loginRouter = express.Router();
 
 loginRouter.post("/", checkJSONHeader, async (req, res, next) => {
@@ -29,9 +27,13 @@ loginRouter.post("/", checkJSONHeader, async (req, res, next) => {
       });
     }
 
-    const token = jwt.sign({ id: user.id, username: user.username }, secret, {
-      expiresIn: 86400
-    });
+    const token = jwt.sign(
+      { id: user.id, username: user.username },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: process.env.JWT_EXPIRE_TIME
+      }
+    );
     res.status(201).send({
       auth: true,
       token,

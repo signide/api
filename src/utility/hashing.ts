@@ -1,7 +1,6 @@
 import bcrypt from "bcrypt";
-import { apiConfig } from "../config/config";
 
-const saltRounds = apiConfig.inProduction ? 12 : 8;
+const saltRounds = process.env.API_IN_PRODUCTION ? 12 : 8;
 
 export async function createHash(text: string): Promise<string> {
   return await bcrypt.hash(text, saltRounds);

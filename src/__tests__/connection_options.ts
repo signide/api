@@ -1,7 +1,5 @@
-import dotenv from "dotenv";
+import "../env";
 import { PostgresConnectionOptions } from "typeorm/driver/postgres/PostgresConnectionOptions";
-
-dotenv.config();
 
 export const baseConnectionOptions: PostgresConnectionOptions = {
   type: "postgres",
