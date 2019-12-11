@@ -5,20 +5,20 @@ services:
   - postgresql
 
 env:
-  - TYPEORM_CONNECTION = postgres
-  - TYPEORM_HOST = localhost
-  - TYPEORM_USERNAME = kashi
-  - TYPEORM_PASSWORD = pass
-  - TYPEORM_DATABASE = typeorm
-  - TYPEORM_PORT = 5432
-  - TYPEORM_SYNCHRONIZE = true
-  - TYPEORM_LOGGING = true
-  - TYPEORM_ENTITIES = "src/entities/*.ts"
-  - TEST_DATABASE = typeorm_test
+  - TYPEORM_CONNECTION=postgres
+  - TYPEORM_HOST=localhost
+  - TYPEORM_USERNAME=kashi
+  - TYPEORM_PASSWORD=pass
+  - TYPEORM_DATABASE=typeorm
+  - TYPEORM_PORT=5432
+  - TYPEORM_SYNCHRONIZE=true
+  - TYPEORM_LOGGING=true
+  - TYPEORM_ENTITIES="src/entities/*.ts"
+  - TEST_DATABASE=typeorm_test
 
 before_script:
   - psql -c 'CREATE DATABASE travis_db;' -U postgres
-  - psql -c "CREATE USER kashi WITH PASSWORD pass;" -U postgres
+  - psql -c "CREATE USER kashi WITH PASSWORD 'pass';" -U postgres
 
 script:
   - yarn test
