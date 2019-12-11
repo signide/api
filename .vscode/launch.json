@@ -7,10 +7,17 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "Launch Program",
+      "name": "Launch API",
       "program": "${workspaceFolder}/src/index.ts",
       "preLaunchTask": "tsc: build - tsconfig.json",
       "outFiles": ["${workspaceFolder}/dist/*"]
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Launch API (ts-node)",
+      "runtimeArgs": ["-r", "ts-node/register"],
+      "args": ["${workspaceFolder}/src/index.ts"]
     },
     {
       "name": "Mocha",
@@ -20,11 +27,23 @@
       "cwd": "${workspaceRoot}",
       "preLaunchTask": "tsc: build - tsconfig.json",
       "program": "${workspaceRoot}/node_modules/mocha/bin/_mocha",
-      "args": [
-        "--no-timeouts",
-        "--colors",
-        "${workspaceRoot}/dist/__tests__/**/*.js"
-      ],
+      "args": ["--no-timeouts", "--colors", "${workspaceRoot}/dist/__tests__/**/*.js"],
+      "stopOnEntry": false,
+      "runtimeExecutable": null,
+      "env": {
+        "NODE_ENV": "testing"
+      },
+      "sourceMaps": true
+    },
+    {
+      "name": "Mocha (current file)",
+      "type": "node",
+      "protocol": "inspector",
+      "request": "launch",
+      "cwd": "${workspaceRoot}",
+      "program": "${workspaceRoot}/node_modules/mocha/bin/_mocha",
+      "runtimeArgs": ["-r", "ts-node/register"],
+      "args": ["--no-timeouts", "--colors", "${file}"],
       "stopOnEntry": false,
       "runtimeExecutable": null,
       "env": {

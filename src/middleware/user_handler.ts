@@ -1,17 +1,15 @@
-import { RequestHandler, Request, Response } from "express";
-import { Role, getUser, IUser } from "../routes/users/model";
-import { IExtendedRequest } from "../types/extended_request";
-import { getEntry } from "../routes/entries/model";
+import { Entry } from "./../entities/entry";
+import { User } from "../entities/user";
+import { RequestHandler, Response } from "express";
+import { ExtendedRequest } from "../types/extended_request";
+import { Role } from "../entities/user";
+import { getRepository } from "typeorm";
 
 type RequiredRole = Role | "self";
 
-async function getUserInfoFromToken(
-  req: IExtendedRequest,
-  res: Response
-): Promise<IUser | void> {
-  const id = Number(req.user.id);
-  const user = await getUser(id);
-  if (!user) {
+async function getUserInfoFromToken(req: ExtendedRequest, res: Response) {
+  const user = await getRepository(User).findOne(req.user.id);
+  if (user.id == null) {
     res.status(401).send({
       error: "no user associated with token"
     });
@@ -22,17 +20,16 @@ async function getUserInfoFromToken(
 
 function checkAuthorization(
   id: number,
-  user: IUser,
+  user: User,
   requiredRole: RequiredRole,
-  allowMatchingID: boolean,
+  allowMatchingId: boolean,
   res: Response
 ): boolean {
   const roles = ["regular", "manager", "admin"];
-  const authorizedRole =
-    roles.indexOf(user.role) >= roles.indexOf(requiredRole);
-  const authorizedID = id === user.id;
+  const authorizedRole = roles.indexOf(user.role) >= roles.indexOf(requiredRole);
+  const authorizedId = id === user.id;
 
-  if (requiredRole === "self" && !authorizedID) {
+  if (requiredRole === "self" && !authorizedId) {
     res.status(401).send({
       error: `only the owner of this resource can access it`
     });
@@ -40,14 +37,14 @@ function checkAuthorization(
   }
 
   if (!authorizedRole) {
-    if (!allowMatchingID) {
+    if (!allowMatchingId) {
       res.status(401).send({
         error: `only ${requiredRole}(s) can access this resource`
       });
       return false;
     }
 
-    if (authorizedID) {
+    if (authorizedId) {
       return true;
     }
 
@@ -65,18 +62,18 @@ function checkAuthorization(
  * and checks if the user is authorized to access the resource.
  *
  * @param requiredRole - The required role
- * @param allowMatchingID - Allows the required role to be overridden if the user's ID
- * matches the param's ID
+ * @param allowMatchingId - Allows the required role to be overridden if the user's Id
+ * matches the param's Id
  * @returns The middleware
  */
 export function createUserHandler(
   requiredRole: RequiredRole = "regular",
-  allowMatchingID?: boolean
+  allowMatchingId?: boolean
 ): RequestHandler {
-  return async (req: IExtendedRequest, res, next) => {
+  return async (req: ExtendedRequest, res, next) => {
     try {
       const user = await getUserInfoFromToken(req, res);
-      if (!user) {
+      if (user.id == null) {
         return;
       }
 
@@ -84,7 +81,7 @@ export function createUserHandler(
         Number(req.params.id),
         user,
         requiredRole,
-        allowMatchingID,
+        allowMatchingId,
         res
       );
       if (!authorized) {
@@ -105,25 +102,25 @@ export function createUserHandler(
  * and checks if the user is authorized to access the resource.
  *
  * @param requiredRole - The required role
- * @param allowMatchingID - Allows the required role to be overridden if the user's ID matches the param's ID
+ * @param allowMatchingId - Allows the required role to be overridden if the user's Id matches the param's Id
  * @returns The middleware
  */
 export function createEntryHandler(
   requiredRole: RequiredRole = "regular",
-  allowMatchingID?: boolean
+  allowMatchingId?: boolean
 ): RequestHandler {
-  return async (req: IExtendedRequest, res, next) => {
+  return async (req: ExtendedRequest, res, next) => {
     try {
       const user = await getUserInfoFromToken(req, res);
       if (!user) {
         return;
       }
 
-      const entryID = Number(req.params.id);
-      const entry = await getEntry(entryID);
+      const entryId = Number(req.params.id);
+      const entry = await getRepository(Entry).findOne(entryId, { relations: ["user"] });
       if (!entry) {
         return res.status(404).send({
-          error: `no entry associated with id ${entryID}`
+          error: `no entry associated with id ${entryId}`
         });
       }
 
@@ -131,7 +128,7 @@ export function createEntryHandler(
         entry.user.id,
         user,
         requiredRole,
-        allowMatchingID,
+        allowMatchingId,
         res
       );
       if (!authorized) {

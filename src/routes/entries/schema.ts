@@ -16,5 +16,5 @@ export const entrySchema = Joi.object({
     .required(),
 
   cityName: Joi.string(),
-  cityID: Joi.number().positive()
-}).xor("cityName", "cityID");
+  cityId: Joi.number().positive()
+}).xor("cityName", "cityId");
