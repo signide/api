@@ -5,21 +5,7 @@ services:
   - postgresql
 
 env:
-  - API_PORT=3000
-  - API_IN_PRODUCTION=true
-  - JWT_SECRET="im a secret"
-  - JWT_EXPIRE_TIME=6h
-  - KEYS_WEATHER=unused
-  - TYPEORM_CONNECTION=postgres
-  - TYPEORM_HOST=localhost
-  - TYPEORM_USERNAME=kashi
-  - TYPEORM_PASSWORD=pass
-  - TYPEORM_DATABASE=typeorm
-  - TYPEORM_PORT=5432
-  - TYPEORM_SYNCHRONIZE=true
-  - TYPEORM_LOGGING=true
-  - TYPEORM_ENTITIES="src/entities/*.ts"
-  - TEST_DATABASE=typeorm_test
+  - API_PORT=3000 API_IN_PRODUCTION=true JWT_SECRET="im a secret" JWT_EXPIRE_TIME=6h KEYS_WEATHER=unused TYPEORM_CONNECTION=postgres TYPEORM_HOST=localhost TYPEORM_USERNAME=kashi TYPEORM_PASSWORD=pass TYPEORM_DATABASE=typeorm TYPEORM_PORT=5432 TYPEORM_SYNCHRONIZE=true TYPEORM_LOGGING=true TYPEORM_ENTITIES="src/entities/*.ts" TEST_DATABASE=typeorm_test
 
 before_script:
   - psql -c 'CREATE DATABASE travis_db;' -U postgres
