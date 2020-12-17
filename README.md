@@ -1,6 +1,6 @@
-# kakashi-api
+# api
 
-I'm learning how to write APIs. This repository houses my progress, almost everything I've learned from zero.
+This repository houses my progress in learning how to make REST APIs.
 
 ### Feature checklist:
 
@@ -13,4 +13,3 @@ I'm learning how to write APIs. This repository houses my progress, almost every
 - [x] Test stubs for route dependencies _-- Achieved on 2019-11-27_
 - [ ] Filtering
 - [ ] Caching
-- [ ] Database setup script
